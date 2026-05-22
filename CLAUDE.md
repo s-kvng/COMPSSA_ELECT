@@ -32,7 +32,7 @@ src/
         page.tsx
       first-login/
         page.tsx
-    (shell)/                    # Authenticated layout with shared sidebar
+    (protected)/                    # Authenticated layout with shared sidebar
       layout.tsx                # Sidebar shell (role-filtered nav)
       dashboard/
         page.tsx
@@ -103,7 +103,7 @@ src/
     types.ts                    # Shared types: Role, ElectionStatus
 ```
 
-**Rule:** `app/` pages import from `features/`. They do not contain logic or JSX beyond a single component call. Keep pages thin.
+**Rule:** `app/` pages import from `features/`. They do not contain logic or JSX beyond a single component call. Keep pages thin. `page` files should only contain a single component call. eg: login page file should call or render LoginPage component; `features/auth/page/LoginScreen.tsx`. So the page file always remain a server side component that only calls or renders a page component from `features/`.
 
 ### Backend (`convex/`)
 
