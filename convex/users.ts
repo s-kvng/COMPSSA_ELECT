@@ -289,7 +289,21 @@ export const createUser = mutation({
       );
     }
 
-    // 5. Insert the user. isFirstLogin is always true on creation.
+    // 5. Prevent duplicate tokenIdentifier.
+    const existingByToken = await ctx.db
+      .query("users")
+      .withIndex("by_token", (q) =>
+        q.eq("tokenIdentifier", args.tokenIdentifier),
+      )
+      .unique();
+
+    if (existingByToken !== null) {
+      throw new Error(
+        `A user with tokenIdentifier "${args.tokenIdentifier}" already exists.`,
+      );
+    }
+
+    // 6. Insert the user. isFirstLogin is always true on creation.
     const userId = await ctx.db.insert("users", {
       name: args.name,
       email: args.email,

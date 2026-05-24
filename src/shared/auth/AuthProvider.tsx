@@ -9,8 +9,9 @@ import React, {
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
 import { ConvexReactClient } from "convex/react";
 import { useQuery } from "convex/react";
+import { z } from "zod";
 import { api } from "../../../convex/_generated/api";
-import type { AuthState, CurrentUser } from "./types";
+import type { AuthState } from "./types";
 
 // ---------------------------------------------------------------------------
 // Convex client
@@ -25,9 +26,29 @@ import type { AuthState, CurrentUser } from "./types";
  *
  * NEXT_PUBLIC_CONVEX_URL is set by `npx convex dev` in `.env.local`.
  */
-const convexClient = new ConvexReactClient(
-  process.env.NEXT_PUBLIC_CONVEX_URL as string,
-);
+const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+
+if (!convexUrl) {
+  throw new Error(
+    "[AuthProvider] NEXT_PUBLIC_CONVEX_URL is missing or empty.",
+  );
+}
+
+const convexClient = new ConvexReactClient(convexUrl);
+
+const currentUserSchema = z.object({
+  _id: z.string(),
+  name: z.string(),
+  email: z.string(),
+  studentId: z.string(),
+  role: z.union([
+    z.literal("student"),
+    z.literal("candidate"),
+    z.literal("ec"),
+    z.literal("hod"),
+  ]),
+  isFirstLogin: z.boolean(),
+});
 
 // ---------------------------------------------------------------------------
 // Context
@@ -100,7 +121,18 @@ function AuthStateProvider({ children }: { children: ReactNode }) {
     if (queryResult === null) {
       return { status: "unauthenticated" };
     }
-    return { status: "authenticated", user: queryResult as CurrentUser };
+
+    const parsedUser = currentUserSchema.safeParse(queryResult);
+    if (!parsedUser.success) {
+      console.error(
+        "[AuthProvider] getCurrentUser returned an invalid shape.",
+        parsedUser.error,
+        queryResult,
+      );
+      return { status: "unauthenticated" };
+    }
+
+    return { status: "authenticated", user: parsedUser.data };
   }, [queryResult]);
 
   const value = useMemo<AuthContextValue>(

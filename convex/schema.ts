@@ -16,43 +16,36 @@ export const userRoleValidator = v.union(
   v.literal("hod"),
 );
 
-export default defineSchema(
-  {
+export default defineSchema({
+  ...authTables,
+
+  /**
+   * Application users.
+   *
+   * `tokenIdentifier` links this record to the Convex Auth identity
+   * via `ctx.auth.getUserIdentity()`. It is the primary join key between
+   * the auth layer and the application layer.
+   *
+   * `isFirstLogin` is a security control: when true, the user must change
+   * their password before accessing any other part of the application.
+   * It is set to true on account creation and cleared server-side only —
+   * never by client input alone.
+   */
+  users: defineTable({
+    name: v.string(),
+    email: v.string(),
+    studentId: v.string(),
+    role: userRoleValidator,
+    isFirstLogin: v.boolean(),
     /**
-     * Application users.
-     *
-     * `tokenIdentifier` links this record to the Convex Auth identity
-     * via `ctx.auth.getUserIdentity()`. It is the primary join key between
-     * the auth layer and the application layer.
-     *
-     * `isFirstLogin` is a security control: when true, the user must change
-     * their password before accessing any other part of the application.
-     * It is set to true on account creation and cleared server-side only —
-     * never by client input alone.
+     * Convex Auth identity subject string.
+     * Format: "<provider>|<userId>"  e.g. "password|abc123"
+     * Stored here so we can look up the application user from any
+     * authenticated request without a secondary index on email.
      */
-    users: defineTable({
-      name: v.string(),
-      email: v.string(),
-      studentId: v.string(),
-      role: userRoleValidator,
-      isFirstLogin: v.boolean(),
-      /**
-       * Convex Auth identity subject string.
-       * Format: "<provider>|<userId>"  e.g. "password|abc123"
-       * Stored here so we can look up the application user from any
-       * authenticated request without a secondary index on email.
-       */
-      tokenIdentifier: v.string(),
-    })
-      .index("by_token", ["tokenIdentifier"])
-      .index("by_email", ["email"])
-      .index("by_student_id", ["studentId"]),
-  },
-  {
-    /**
-     * Merge Convex Auth's required internal tables (sessions, accounts, etc.)
-     * into the schema. These are managed entirely by the auth library.
-     */
-    ...authTables,
-  },
-);
+    tokenIdentifier: v.string(),
+  })
+    .index("by_token", ["tokenIdentifier"])
+    .index("by_email", ["email"])
+    .index("by_student_id", ["studentId"]),
+});
