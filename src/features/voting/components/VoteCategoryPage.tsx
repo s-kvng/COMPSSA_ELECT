@@ -73,7 +73,7 @@ export default function VoteCategoryPage() {
   const selectedCandidate = category.candidates.find(c => c.id === selectedCandidateId);
 
   return (
-    <div id="vote-category-page" className="space-y-6 font-sans py-4 animate-fade-in relative">
+    <div id="vote-category-page" className="space-y-6 font-sans py-4 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full animate-fade-in relative">
       {/* Back navigation Row */}
       <div className="flex items-center gap-2">
         <button

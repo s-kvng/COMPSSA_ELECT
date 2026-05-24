@@ -25,6 +25,20 @@ import {
 export default function DashboardPage() {
   const { currentUser, elections, voteRecords, actionLog, users } = useAuthContext();
   const { navigateTo } = useNavigation();
+  const [currentTime, setCurrentTime] = React.useState<string | null>(null);
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+    const updateTime = () => {
+      const now = new Date();
+      const utcString = now.toISOString().replace('T', ' ').slice(0, 16);
+      setCurrentTime(utcString);
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   if (!currentUser) return null;
 
@@ -64,7 +78,7 @@ export default function DashboardPage() {
   const recentLogs = actionLog.slice(0, 3);
 
   return (
-    <div id="dashboard-viewport" className="space-y-6 font-sans py-4">
+    <div id="dashboard-viewport" className="space-y-6 font-sans py-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
       {/* Visual Welcome Banner */}
       <div className="bg-white border border-slate-200 p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xs">
         <div>
@@ -76,7 +90,7 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 font-mono text-xs bg-slate-50 border border-slate-200 px-3.5 py-1.5 rounded-lg text-slate-500 shadow-2xs">
-          <span>UTC TIME: 2026-05-23 23:48</span>
+          <span>UTC TIME: {isMounted && currentTime ? currentTime : '---'}</span>
         </div>
       </div>
 

@@ -85,7 +85,7 @@ export default function Sidebar() {
   return (
     <div
       id="sidebar-container"
-      className="w-64 bg-slate-900 border-r border-slate-800 text-slate-300 flex flex-col justify-between h-screen sticky top-0 shrink-0 select-none z-10 font-sans"
+      className="w-64 bg-slate-900 border-r border-slate-800 text-slate-300 flex flex-col justify-between h-screen sticky top-0 shrink-0 select-none z-40 font-sans"
     >
       <div className="flex flex-col gap-6 pt-6 px-4">
         {/* Logo / Header */}

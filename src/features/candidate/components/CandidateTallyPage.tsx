@@ -40,7 +40,7 @@ export default function CandidateTallyPage() {
   const isElectionActive = activeElection?.status === 'Active';
 
   return (
-    <div id="candidate-tally-viewport" className="space-y-6 font-sans py-4 animate-fade-in">
+    <div id="candidate-tally-viewport" className="space-y-6 font-sans py-4 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full animate-fade-in">
       {/* Visual Board */}
       <div className="bg-linear-to-b from-blue-900 to-slate-950 text-white rounded-2xl p-8 border border-slate-800 text-center relative overflow-hidden shadow-md select-none">
         {/* Abstract background graphics */}

@@ -40,7 +40,7 @@ export default function ElectionsPage() {
   };
 
   return (
-    <div id="elections-page" className="space-y-6 font-sans py-4 animate-fade-in relative select-none">
+    <div id="elections-page" className="space-y-6 font-sans py-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full animate-fade-in relative select-none">
       {/* Page Header */}
       <div className="flex justify-between items-center pb-4 border-b border-slate-200">
         <div className="space-y-1">

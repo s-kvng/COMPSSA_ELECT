@@ -30,7 +30,7 @@ export default function ResultsPage() {
   const isPublished = election.status === 'Published';
 
   return (
-    <div id="results-page" className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 font-sans select-none animate-fade-in text-left">
+    <div id="results-page" className="min-h-screen bg-slate-50 py-6 sm:py-12 px-4 sm:px-6 lg:px-8 font-sans select-none animate-fade-in text-left">
       <div className="max-w-3xl mx-auto space-y-6">
         {/* Back control */}
         <div className="flex items-center justify-between">

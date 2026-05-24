@@ -31,6 +31,11 @@ export default function LiveDashboardPage() {
     addActionLog
   } = useAuthContext();
   const { navigateTo, params } = useNavigation();
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const electId = params.id;
   const election = elections.find(e => e.id === electId);
@@ -108,7 +113,7 @@ export default function LiveDashboardPage() {
   };
 
   return (
-    <div id="live-dashboard" className="space-y-6 font-sans py-4 animate-fade-in select-none">
+    <div id="live-dashboard" className="space-y-6 font-sans py-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full animate-fade-in select-none">
       {/* Top breadcrumb header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div className="flex items-center gap-3">

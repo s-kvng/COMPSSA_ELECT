@@ -25,9 +25,15 @@ export default function DemoPanel() {
 
   const [isOpen, setIsOpen] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Fast voting simulation helper
   const handleTriggerSimulatedVotes = () => {
+    if (!isMounted) return;
     setIsSimulating(true);
     addActionLog('Triggered automated high-volume demo voting loop.');
 
@@ -45,24 +51,13 @@ export default function DemoPanel() {
       return;
     }
 
-    // Register a random vote for each eligible voter in all categories
     let voteAddedCount = 0;
     eligibleVoters.forEach((voter) => {
       activeElection.categories.forEach((cat) => {
-        // Only if they haven't voted in this category yet
         const alreadyCast = voteRecords.some(r => r.voterId === voter.id && r.categoryId === cat.id);
         if (!alreadyCast && cat.candidates.length > 0) {
           const randomCandidate = cat.candidates[Math.floor(Math.random() * cat.candidates.length)];
           
-          // Mimic voter submission
-          const rRecord = {
-            voterId: voter.id,
-            categoryId: cat.id,
-            candidateId: randomCandidate.id,
-            timestamp: new Date().toISOString()
-          };
-
-          // Hook directly to our auth database updates by mocking cast registration
           setTimeout(() => {
             registerVote(cat.id, randomCandidate.id);
           }, Math.random() * 500);

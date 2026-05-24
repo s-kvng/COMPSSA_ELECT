@@ -47,10 +47,10 @@ export default function VotePage() {
   const isCompleted = totalCategoriesCount > 0 && userVotedCount === totalCategoriesCount;
 
   return (
-    <div id="vote-page" className="space-y-6 font-sans animate-fade-in py-4">
+    <div id="vote-page" className="space-y-6 font-sans animate-fade-in py-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
       {/* Page header */}
       <div>
-        <h2 className="font-display font-extrabold text-2xl text-slate-900">{activeElection.title}</h2>
+        <h2 className="font-display font-extrabold text-xl sm:text-2xl text-slate-900">{activeElection.title}</h2>
         <p className="text-xs text-slate-500 mt-1">
           Each student is registered to vote exactly once per category. Votes are cryptographically sealed upon submission and are irrevocable.
         </p>

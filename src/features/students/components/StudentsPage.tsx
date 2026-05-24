@@ -91,7 +91,7 @@ export default function StudentsPage() {
   };
 
   return (
-    <div id="students-panel" className="space-y-6 font-sans py-4 animate-fade-in select-none">
+    <div id="students-panel" className="space-y-6 font-sans py-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full animate-fade-in select-none">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div className="space-y-1">
