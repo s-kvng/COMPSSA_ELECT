@@ -87,7 +87,7 @@ export default function DemoPanel() {
           onClick={() => setIsOpen(true)}
           className="bg-slate-900 border border-slate-750 text-white p-3 rounded-full hover:bg-slate-800 shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group cursor-pointer"
         >
-          <Sliders className="h-5 w-5 stroke-[2] text-blue-400 group-hover:rotate-45 transition-transform" />
+          <Sliders className="h-5 w-5 stroke-2 text-blue-400 group-hover:rotate-45 transition-transform" />
           <span className="text-xs font-bold font-display pr-1 hidden sm:inline">Inspect Demo Engine</span>
           {isSimulating && (
             <span className="relative flex h-2 w-2">

@@ -6,8 +6,8 @@
 'use client';
 
 import React from 'react';
-import { useNavigation } from '../../../features/auth/navigation';
-import { useAuthContext } from '../../../features/auth/mockAuth';
+import { useNavigation } from '../../features/auth/navigation';
+import { useAuthContext } from '../../features/auth/mockAuth';
 import { Award, ArrowRight, CheckSquare, ShieldCheck, Heart, Users } from 'lucide-react';
 
 export default function LandingPage() {
@@ -75,17 +75,17 @@ export default function LandingPage() {
         {/* Triple selling values cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-8 w-full">
           <div className="border border-slate-200/70 p-5 bg-white/70 backdrop-blur-xs rounded-xl shadow-3xs text-left space-y-2">
-            <CheckSquare className="h-5 w-5 text-emerald-500 stroke-[2]" />
+            <CheckSquare className="h-5 w-5 text-emerald-500 stroke-2" />
             <h4 className="font-display font-bold text-xs text-slate-900 mt-2">Irrevocable Balloting</h4>
             <p className="text-[11px] text-slate-400 leading-normal">Each student cast is signed, securely logged, and completely unalterable after confirmation.</p>
           </div>
           <div className="border border-slate-200/70 p-5 bg-white/70 backdrop-blur-xs rounded-xl shadow-3xs text-left space-y-2">
-            <ShieldCheck className="h-5 w-5 text-blue-500 stroke-[2]" />
+            <ShieldCheck className="h-5 w-5 text-blue-500 stroke-2" />
             <h4 className="font-display font-bold text-xs text-slate-900 mt-2">Anonymity Safeguard</h4>
             <p className="text-[11px] text-slate-400 leading-normal">Independent voter records are pseudoymized. Nobody can associate your name to your selected candidate choices.</p>
           </div>
           <div className="border border-slate-200/70 p-5 bg-white/70 backdrop-blur-xs rounded-xl shadow-3xs text-left space-y-2">
-            <Users className="h-5 w-5 text-purple-500 stroke-[2]" />
+            <Users className="h-5 w-5 text-purple-500 stroke-2" />
             <h4 className="font-display font-bold text-xs text-slate-900 mt-2">Verified Roster Match</h4>
             <p className="text-[11px] text-slate-400 leading-normal">The Electoral Commission manages verified student ID lists. Only enroled members of COMPSSA can enter.</p>
           </div>

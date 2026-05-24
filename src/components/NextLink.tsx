@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import NextNextLink from 'next/link';
+
 
 export interface LinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
   href: string;
@@ -13,9 +13,10 @@ export interface LinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement>
 export default function Link(props: LinkProps) {
   const { href, children, onClick, className, ...rest } = props;
 
+  // Fallback to a standard anchor tag if next/link is not available in the environment
   return (
-    <NextNextLink href={href} className={className} {...rest}>
+    <a href={href} className={className} onClick={onClick} {...rest}>
       {children}
-    </NextNextLink>
+    </a>
   );
 }
