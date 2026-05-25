@@ -2,9 +2,12 @@ import type { Metadata } from "next";
 import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import { TooltipProvider } from "@/components/ui/tooltip"
-import { AuthProvider } from "@/features/auth/mockAuth";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
+import { AuthProvider } from "@/shared/auth";
 import { NavigationProvider } from "@/features/auth/navigation";
+import RouteGuard from "@/components/RouteGuard";
+import { ConvexClientProvider } from "@/app/ConvexClientProvider";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -29,17 +32,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={cn("h-full antialiased", spaceGrotesk.variable, jetbrainsMono.variable)}
-    >
-      <body className="min-h-full flex flex-col font-sans">
-        <AuthProvider>
-          <NavigationProvider>
-            <TooltipProvider>{children}</TooltipProvider>
-          </NavigationProvider>
-        </AuthProvider>
-      </body>
-    </html>
+    <ConvexAuthNextjsServerProvider>
+      <html
+        lang="en"
+        className={cn("h-full antialiased", spaceGrotesk.variable, jetbrainsMono.variable)}
+      >
+        <body className="min-h-full flex flex-col font-sans">
+          <AuthProvider>
+            <NavigationProvider>
+              <TooltipProvider>
+                <ConvexClientProvider>
+                  <RouteGuard>{children}</RouteGuard>
+                </ConvexClientProvider>
+              </TooltipProvider>
+            </NavigationProvider>
+          </AuthProvider>
+        </body>
+      </html>
+    </ConvexAuthNextjsServerProvider>
   );
 }

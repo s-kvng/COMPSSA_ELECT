@@ -56,6 +56,61 @@ export const publishElection = mutation({
   },
 });
 
+export const getTurnout = query({
+  args: { electionId: v.id("elections") },
+  returns: v.object({ uniqueVoters: v.number(), registeredCount: v.number() }),
+  handler: async (ctx, args) => {
+    const user = await getUser(ctx);
+    if (user.role !== "ec" && user.role !== "hod") throw new ConvexError("Forbidden");
+
+    const votes = await ctx.db
+      .query("voted_log")
+      .withIndex("by_election", (q) => q.eq("electionId", args.electionId))
+      .take(10000);
+
+    const uniqueVoterIds = new Set(votes.map((v) => v.studentId));
+
+    const [students, candidates] = await Promise.all([
+      ctx.db.query("users").withIndex("by_role", (q) => q.eq("role", "student")).take(1000),
+      ctx.db.query("users").withIndex("by_role", (q) => q.eq("role", "candidate")).take(100),
+    ]);
+
+    return {
+      uniqueVoters: uniqueVoterIds.size,
+      registeredCount: students.length + candidates.length,
+    };
+  },
+});
+
+export const getRecentEcActions = query({
+  args: { electionId: v.id("elections") },
+  returns: v.array(
+    v.object({
+      _id: v.id("ec_action_log"),
+      action: v.string(),
+      timestamp: v.number(),
+      actorId: v.id("users"),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    const user = await getUser(ctx);
+    if (user.role !== "ec") throw new ConvexError("Forbidden");
+
+    const actions = await ctx.db
+      .query("ec_action_log")
+      .withIndex("by_election", (q) => q.eq("electionId", args.electionId))
+      .order("desc")
+      .take(10);
+
+    return actions.map((a) => ({
+      _id: a._id,
+      action: a.action,
+      timestamp: a.timestamp,
+      actorId: a.actorId,
+    }));
+  },
+});
+
 export const auditLogExport = query({
   args: { electionId: v.id("elections") },
   returns: v.array(

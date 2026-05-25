@@ -1,14 +1,15 @@
 'use client';
 
 import React from 'react';
-import { useNavigation } from '../../features/auth/navigation';
-import { useAuthContext } from '../../features/auth/mockAuth';
+import { useRouter } from 'next/navigation';
+import { useCurrentUser } from '@/shared/auth';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Award01Icon, ArrowRight01Icon, Shield01Icon, CheckmarkCircle01Icon } from '@hugeicons/core-free-icons';
 
 export default function LandingPage() {
-  const { navigateTo } = useNavigation();
-  const { currentUser } = useAuthContext();
+  const router = useRouter();
+  const currentUser = useCurrentUser();
+  const navigateTo = (path: string) => router.push(path);
 
   return (
     <>
@@ -219,10 +220,10 @@ export default function LandingPage() {
                 />
               </button>
               <button
-                onClick={() => navigateTo('/results/elect-2026')}
+                onClick={() => navigateTo('/dashboard')}
                 className="px-5 py-3.5 text-sm font-semibold text-muted-foreground border border-border rounded-xl hover:bg-muted transition-all"
               >
-                View Public Results
+                View Results
               </button>
             </div>
 

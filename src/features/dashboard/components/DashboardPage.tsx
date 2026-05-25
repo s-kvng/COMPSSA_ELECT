@@ -1,14 +1,11 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 'use client';
 
 import React from 'react';
+import { useQuery } from 'convex/react';
+import { useRouter } from 'next/navigation';
+import { useCurrentUser } from '@/shared/auth';
 import { useIsMounted } from '@/hooks/useIsMounted';
-import { useAuthContext } from '@/features/auth/mockAuth';
-import { useNavigation } from '@/features/auth/navigation';
+import { api } from '../../../../convex/_generated/api';
 import StatusBadge from '@/components/StatusBadge';
 import EmptyState from '@/components/EmptyState';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -23,16 +20,35 @@ import {
 } from '@hugeicons/core-free-icons';
 
 export default function DashboardPage() {
-  const { currentUser, elections, voteRecords, actionLog, users } = useAuthContext();
-  const { navigateTo } = useNavigation();
-  const [currentTime, setCurrentTime] = React.useState<string | null>(null);
+  const currentUser = useCurrentUser();
+  const router = useRouter();
   const isMounted = useIsMounted();
+  const [currentTime, setCurrentTime] = React.useState<string | null>(null);
+
+  const currentElection = useQuery(api.elections.getCurrentElection);
+  const myVotes = useQuery(
+    api.votes.getMyVotes,
+    currentElection?._id ? { electionId: currentElection._id } : 'skip',
+  );
+  const candidateTally = useQuery(
+    api.results.myVoteCount,
+  );
+  const turnout = useQuery(
+    api.ec_actions.getTurnout,
+    currentElection?._id && (currentUser?.role === 'ec' || currentUser?.role === 'hod')
+      ? { electionId: currentElection._id }
+      : 'skip',
+  );
+  const recentActions = useQuery(
+    api.ec_actions.getRecentEcActions,
+    currentElection?._id && currentUser?.role === 'ec'
+      ? { electionId: currentElection._id }
+      : 'skip',
+  );
 
   React.useEffect(() => {
     const updateTime = () => {
-      const now = new Date();
-      const utcString = now.toISOString().replace('T', ' ').slice(0, 16);
-      setCurrentTime(utcString);
+      setCurrentTime(new Date().toISOString().replace('T', ' ').slice(0, 16));
     };
     updateTime();
     const interval = setInterval(updateTime, 1000);
@@ -41,51 +57,29 @@ export default function DashboardPage() {
 
   if (!currentUser) return null;
 
-  // Find standard or active elections
-  const activeElection = elections.find(e => e.status === 'Active') || elections[0];
-  const hasElection = !!activeElection;
+  const electionId = currentElection?._id;
+  const totalCategories = currentElection?.categories.length ?? 0;
+  const votedCount = myVotes?.length ?? 0;
+  const hasFinishedVoting = totalCategories > 0 && votedCount === totalCategories;
 
-  // Let's compute some live statistics
-  // Voted categories by CURRENT student
-  const totalCategoriesCount = activeElection ? activeElection.categories.length : 0;
-  const userCastVotes = voteRecords.filter(r => r.voterId === currentUser.id && activeElection?.categories.some(c => c.id === r.categoryId));
-  const userVotedCount = userCastVotes.length;
-  const hasFinishedVoting = totalCategoriesCount > 0 && userVotedCount === totalCategoriesCount;
+  const uniqueVoters = turnout?.uniqueVoters ?? 0;
+  const registeredCount = turnout?.registeredCount ?? 0;
+  const turnoutPercent = registeredCount > 0 ? Math.round((uniqueVoters / registeredCount) * 100) : 0;
 
-  // Turnout stats
-  const registeredStudentsCount = users.filter(u => u.role === 'Student' || u.role === 'Candidate').length;
-  // Unique voters in active election
-  const uniqueVoterIds = new Set(voteRecords.filter(r => activeElection?.categories.some(c => c.id === r.categoryId)).map(r => r.voterId));
-  const votedTurnoutCount = uniqueVoterIds.size;
-  const turnoutPercent = registeredStudentsCount > 0 ? Math.round((votedTurnoutCount / registeredStudentsCount) * 100) : 0;
-
-  // Candidate tally lookup
-  let candidateTally = 0;
-  let candidateCategoryName = '';
-  if (currentUser.role === 'Candidate') {
-    const matchedCategory = activeElection?.categories.find(c =>
-      c.candidates.some(cand => cand.id === currentUser.id)
-    );
-    if (matchedCategory) {
-      candidateCategoryName = matchedCategory.name;
-      const meAsCandidate = matchedCategory.candidates.find(cand => cand.id === currentUser.id);
-      candidateTally = meAsCandidate ? meAsCandidate.votes : 0;
-    }
-  }
-
-  // Last 3 action logs for EC
-  const recentLogs = actionLog.slice(0, 3);
+  const candidateCategoryName = currentElection?.categories.find(
+    (c) => c.candidates.some((cand) => cand.userId === currentUser._id),
+  )?.name ?? '';
 
   return (
-    <div id="dashboard-viewport" className="space-y-6 font-sans py-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
-      {/* Visual Welcome Banner */}
+    <div className="space-y-6 font-sans py-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+      {/* Welcome Banner */}
       <div className="bg-white border border-slate-200 p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xs">
         <div>
           <h2 className="font-display font-extrabold text-xl text-slate-800 tracking-tight">
             Greetings, {currentUser.name}
           </h2>
           <p className="text-xs text-slate-500 mt-1">
-            Department of Computer Science • Registered Role: <span className="font-semibold text-slate-700">{currentUser.role}</span>
+            Department of Computer Science • Role: <span className="font-semibold text-slate-700 capitalize">{currentUser.role}</span>
           </p>
         </div>
         <div className="flex items-center gap-2 font-mono text-xs bg-slate-50 border border-slate-200 px-3.5 py-1.5 rounded-lg text-slate-500 shadow-2xs">
@@ -93,24 +87,38 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Main Active Election status banner */}
-      {hasElection ? (
+      {/* No election state */}
+      {currentElection === null && (
+        <EmptyState
+          title="No Active Elections Set"
+          description="The Electoral Commission has not created or launched an election yet. Please check back later."
+        />
+      )}
+
+      {/* Loading */}
+      {currentElection === undefined && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-10 flex items-center justify-center">
+          <div className="h-6 w-6 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+        </div>
+      )}
+
+      {/* Election Banner */}
+      {currentElection && (
         <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
           <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
             <div className="space-y-1">
               <span className="text-[10px] font-mono uppercase bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded-md">COMPSSA General Election</span>
-              <h3 className="font-display font-bold text-base text-slate-800 mt-1">{activeElection.title}</h3>
+              <h3 className="font-display font-bold text-base text-slate-800 mt-1">{currentElection.title}</h3>
             </div>
-            <StatusBadge status={activeElection.status} />
+            <StatusBadge status={currentElection.status} />
           </div>
 
           <div className="p-6">
-            {/* Student View Panel */}
-            {(currentUser.role === 'Student' || currentUser.role === 'Candidate') && (
+            {/* Student / Candidate View */}
+            {(currentUser.role === 'student' || currentUser.role === 'candidate') && (
               <div className="space-y-4">
-                {activeElection.status === 'Active' ? (
+                {currentElection.status === 'active' ? (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Voting Progress Card */}
                     <div className="col-span-1 md:col-span-2 border border-slate-100 bg-linear-to-b from-white to-slate-50/20 p-5 rounded-xl space-y-4 shadow-2xs">
                       <div className="flex items-center gap-3">
                         <div className="bg-blue-50 text-blue-600 p-2.5 rounded-lg">
@@ -118,43 +126,39 @@ export default function DashboardPage() {
                         </div>
                         <div>
                           <h4 className="font-display font-semibold text-sm text-slate-900">Your Voting Progress</h4>
-                          <p className="text-xs text-slate-500 mt-0.5">Please ensure all administrative boxes are marked.</p>
+                          <p className="text-xs text-slate-500 mt-0.5">Ensure all categories are marked.</p>
                         </div>
                       </div>
-
                       <div className="space-y-2">
                         <div className="flex justify-between text-xs font-medium text-slate-600">
                           <span>Categories Cast</span>
-                          <span className="font-mono text-slate-900">{userVotedCount} of {totalCategoriesCount}</span>
+                          <span className="font-mono text-slate-900">{votedCount} of {totalCategories}</span>
                         </div>
-                        {/* Progress Bar */}
                         <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                           <div
                             className="h-full bg-blue-600 rounded-full transition-all duration-300"
-                            style={{ width: `${(userVotedCount / (totalCategoriesCount || 1)) * 100}%` }}
-                          ></div>
+                            style={{ width: `${(votedCount / (totalCategories || 1)) * 100}%` }}
+                          />
                         </div>
                       </div>
-
                       <div className="pt-2">
                         {hasFinishedVoting ? (
                           <div className="bg-green-50 border border-green-100 text-green-700 p-3 rounded-lg text-xs flex gap-2 items-center">
                             <HugeiconsIcon icon={CheckmarkCircle01Icon} className="h-4.5 w-4.5 text-green-600" />
-                            <span>Congratulations! All of your COMPSSA election ballots have been securely sealed.</span>
+                            <span>All of your COMPSSA election ballots have been securely sealed.</span>
                           </div>
                         ) : (
                           <button
-                            onClick={() => navigateTo('/vote')}
-                            className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs px-4  py-2.5 rounded-lg transition-all shadow-xs"
+                            onClick={() => router.push('/vote')}
+                            className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs px-4 py-2.5 rounded-lg transition-all shadow-xs"
                           >
-                            <span>{userVotedCount > 0 ? 'Continue Cast Process' : 'Cast Your Ballots Now'}</span>
+                            <span>{votedCount > 0 ? 'Continue Cast Process' : 'Cast Your Ballots Now'}</span>
                             <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" />
                           </button>
                         )}
                       </div>
                     </div>
 
-                    {/* Additional info pane */}
                     <div className="border border-slate-100 p-5 rounded-xl bg-slate-50/50 flex flex-col justify-between">
                       <div className="space-y-2">
                         <div className="flex items-center gap-1 text-xs text-slate-500 font-medium">
@@ -162,23 +166,22 @@ export default function DashboardPage() {
                           <span>Closing Deadline</span>
                         </div>
                         <p className="text-xs font-mono font-bold text-slate-800">
-                          May 25, 2026 • 18:00 UTC
+                          {new Date(currentElection.endTime).toISOString().replace('T', ' ').slice(0, 16)} UTC
                         </p>
                         <p className="text-[11px] text-slate-400 leading-normal">
-                          Results will be formatted, checked, and posted publicly directly by the EC right after polling closure.
+                          Results will be posted publicly by the EC right after polling closure.
                         </p>
                       </div>
-
                     </div>
                   </div>
-                ) : activeElection.status === 'Published' ? (
+                ) : currentElection.status === 'published' ? (
                   <div className="bg-purple-50/40 border border-purple-100 p-6 rounded-xl flex flex-col md:flex-row justify-between items-center gap-4">
                     <div className="space-y-1">
                       <h4 className="font-display font-bold text-sm text-purple-900">Official Election Results Posted</h4>
                       <p className="text-xs text-purple-700">The Electoral Commission has verified the tallies and released the public audit logs.</p>
                     </div>
                     <button
-                      onClick={() => navigateTo(`/results/${activeElection.id}`)}
+                      onClick={() => router.push(`/results/${electionId}`)}
                       className="whitespace-nowrap bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs px-4 py-2.5 rounded-lg shadow-sm"
                     >
                       Enter Public Results Board
@@ -189,13 +192,13 @@ export default function DashboardPage() {
                     <HugeiconsIcon icon={Clock01Icon} className="h-8 w-8 text-amber-500 mx-auto" />
                     <h4 className="font-display font-bold text-sm text-slate-800">Voting Window Closed</h4>
                     <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                      All ballots are currently locked for audits. The Electoral Commission will publish the final winner counts shortly.
+                      All ballots are locked for audits. The Electoral Commission will publish results shortly.
                     </p>
                   </div>
                 )}
 
-                {/* Candidate Specific Live Tally Badge */}
-                {currentUser.role === 'Candidate' && (
+                {/* Candidate Tally Badge */}
+                {currentUser.role === 'candidate' && (
                   <div className="mt-4 border border-blue-100 bg-linear-to-b from-blue-50/30 to-blue-50/60 p-5 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <div className="bg-blue-100 text-blue-600 p-2.5 rounded-lg">
@@ -208,11 +211,11 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-center sm:text-right">
-                        <span className="block text-2xl font-mono font-extrabold text-blue-700">{candidateTally}</span>
+                        <span className="block text-2xl font-mono font-extrabold text-blue-700">{candidateTally ?? '—'}</span>
                         <span className="text-[10px] text-slate-400 font-mono uppercase tracking-wider">Live Votes</span>
                       </div>
                       <button
-                        onClick={() => navigateTo('/dashboard/candidate')}
+                        onClick={() => router.push('/dashboard/candidate')}
                         className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-xs px-3.5 py-2 rounded-lg transition-all"
                       >
                         Launch Monitor →
@@ -223,36 +226,27 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* EC Admin Dashboard View */}
-            {currentUser.role === 'EC' && (
+            {/* EC View */}
+            {currentUser.role === 'ec' && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Turnout Stats widget */}
                   <div className="border border-slate-200/80 p-5 rounded-xl space-y-3.5 bg-linear-to-b from-white to-slate-50/20 shadow-3xs flex flex-col justify-between">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
                         <HugeiconsIcon icon={UserGroupIcon} className="h-4.5 w-4.5 text-blue-500" />
                         <span>Registered Turnout</span>
                       </div>
-                      <h4 className="text-2xl font-mono font-extrabold text-slate-900 mt-2">
-                        {turnoutPercent}%
-                      </h4>
-                      <p className="text-[11px] text-slate-400">
-                        {votedTurnoutCount} of {registeredStudentsCount} verified student electors have voted.
-                      </p>
+                      <h4 className="text-2xl font-mono font-extrabold text-slate-900 mt-2">{turnoutPercent}%</h4>
+                      <p className="text-[11px] text-slate-400">{uniqueVoters} of {registeredCount} verified electors have voted.</p>
                     </div>
-
-                    <div className="pt-2">
-                      <button
-                        onClick={() => navigateTo(`/admin/elections/${activeElection.id}/live`)}
-                        className="w-full flex items-center justify-center gap-1 text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200/50 py-2 rounded-lg transition-all"
-                      >
-                        Enter EC Live Control Panel →
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => electionId && router.push(`/admin/elections/${electionId}/live`)}
+                      className="w-full flex items-center justify-center gap-1 text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200/50 py-2 rounded-lg transition-all"
+                    >
+                      Enter EC Live Control Panel →
+                    </button>
                   </div>
 
-                  {/* Registered voters breakdown */}
                   <div className="border border-slate-200/80 p-5 rounded-xl space-y-3 bg-linear-to-b from-white to-slate-50/20 shadow-3xs flex flex-col justify-between">
                     <div>
                       <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
@@ -260,21 +254,20 @@ export default function DashboardPage() {
                         <span>Election Controls</span>
                       </div>
                       <p className="text-xs text-slate-600 font-medium mt-3">
-                        Total categories cataloged: <span className="font-mono font-bold text-slate-800">{totalCategoriesCount}</span>
+                        Total categories: <span className="font-mono font-bold text-slate-800">{totalCategories}</span>
                       </p>
                       <p className="text-[11px] text-slate-400 leading-normal mt-1.5">
-                        Current system status: <span className="font-bold text-blue-600">{activeElection.status}</span>. You can modify categories, manage candidates list and import credentials safely.
+                        Status: <span className="font-bold text-blue-600 capitalize">{currentElection.status}</span>.
                       </p>
                     </div>
                     <button
-                      onClick={() => navigateTo('/admin/elections')}
+                      onClick={() => router.push('/admin/elections')}
                       className="w-full flex items-center justify-center gap-1 text-xs font-semibold bg-slate-50 hover:bg-slate-100 border border-slate-200 py-2 rounded-lg transition-all text-slate-700"
                     >
                       Manage Elections List
                     </button>
                   </div>
 
-                  {/* EC Quick Actions */}
                   <div className="border border-slate-200/80 p-5 rounded-xl bg-slate-50/40 shadow-3xs flex flex-col justify-between">
                     <div>
                       <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-3">
@@ -282,13 +275,10 @@ export default function DashboardPage() {
                         <span>Quick Setup Actions</span>
                       </div>
                       <span className="block text-2xs uppercase tracking-wider text-slate-400 font-mono font-bold">Voters Database</span>
-                      <p className="text-xs text-slate-600 mt-1 font-semibold">Bulk Import Students</p>
-                      <p className="text-[11px] text-slate-400 leading-normal mt-1">
-                        Download fresh templates, copy-paste CSV records, and generate on-the-fly random passwords.
-                      </p>
+                      <p className="text-xs text-slate-600 mt-1 font-semibold">Students Registry</p>
                     </div>
                     <button
-                      onClick={() => navigateTo('/admin/students')}
+                      onClick={() => router.push('/admin/students')}
                       className="w-full mt-3 flex items-center justify-center gap-1 text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 py-2 rounded-lg transition-all cursor-pointer"
                     >
                       Enter Students Portal
@@ -296,7 +286,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* Audit Logger History */}
+                {/* Audit History */}
                 <div className="border border-slate-200 rounded-xl p-5 bg-white">
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                     <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
@@ -305,26 +295,26 @@ export default function DashboardPage() {
                     </div>
                     <span className="text-[10px] font-mono text-slate-400 bg-slate-50 border px-2 py-0.5 rounded">Security Sealed</span>
                   </div>
-
                   <div className="mt-3.5 space-y-3">
-                    {recentLogs.map((log) => (
-                      <div key={log.id} className="flex justify-between items-start text-xs border-b border-slate-50 pb-2.5 last:border-b-0 last:pb-0">
-                        <div className="space-y-0.5 max-w-lg">
-                          <p className="text-slate-700 font-medium leading-normal">{log.action}</p>
-                          <p className="text-[10px] text-slate-400">Issuer: {log.user}</p>
+                    {!recentActions || recentActions.length === 0 ? (
+                      <p className="text-xs text-slate-400">No recent EC actions.</p>
+                    ) : (
+                      recentActions.map((log) => (
+                        <div key={log._id} className="flex justify-between items-start text-xs border-b border-slate-50 pb-2.5 last:border-b-0 last:pb-0">
+                          <p className="text-slate-700 font-medium">{log.action}</p>
+                          <span className="font-mono text-[9px] text-slate-400 shrink-0 uppercase">
+                            {new Date(log.timestamp).toISOString().slice(11, 16)} UTC
+                          </span>
                         </div>
-                        <span className="font-mono text-[9px] text-slate-400 shrink-0 uppercase">
-                          {log.timestamp.replace('T', ' ').slice(11, 16)} UTC
-                        </span>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
             )}
 
-            {/* HOD View Panel */}
-            {currentUser.role === 'HOD' && (
+            {/* HOD View */}
+            {currentUser.role === 'hod' && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="col-span-1 md:col-span-2 border border-slate-150 p-5 rounded-xl bg-slate-50/50 space-y-4 shadow-3xs">
                   <div className="flex items-center gap-3">
@@ -336,22 +326,20 @@ export default function DashboardPage() {
                       <p className="text-xs text-slate-500 mt-0.5">Real-time inspection mode authorized.</p>
                     </div>
                   </div>
-
                   <div className="space-y-2 pt-1">
                     <div className="flex justify-between text-xs font-semibold text-slate-600">
                       <span>Live Response Tally Rate</span>
-                      <span className="font-mono text-slate-900">{votedTurnoutCount} cast / {registeredStudentsCount} total</span>
+                      <span className="font-mono text-slate-900">{uniqueVoters} cast / {registeredCount} total</span>
                     </div>
                     <div className="h-2.5 w-full bg-slate-200 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-blue-600 rounded-full transition-all duration-300"
                         style={{ width: `${turnoutPercent}%` }}
-                      ></div>
+                      />
                     </div>
                   </div>
-
                   <div className="text-[11px] text-slate-400 leading-normal bg-white p-3 border rounded-lg">
-                    You have read-only monitoring access to all registered position charts. You cannot edit categories or interfere with voter submissions.
+                    You have read-only monitoring access. You cannot edit categories or interfere with voter submissions.
                   </div>
                 </div>
 
@@ -360,11 +348,11 @@ export default function DashboardPage() {
                     <span className="text-[9px] font-mono text-slate-400 uppercase font-bold tracking-wider">Department Panel</span>
                     <h4 className="font-display font-bold text-sm text-slate-900">Watch Counts Live</h4>
                     <p className="text-xs text-slate-500 leading-relaxed">
-                      Enter the monitoring dashboard to observe candidate tallies climb transparently, category-by-category.
+                      Observe candidate tallies climb transparently, category-by-category.
                     </p>
                   </div>
                   <button
-                    onClick={() => navigateTo('/admin/live')}
+                    onClick={() => router.push('/admin/live')}
                     className="w-full mt-4 flex items-center justify-center gap-1.5 py-2 px-4 bg-slate-900 text-white font-semibold text-xs text-center rounded-lg hover:bg-slate-800 transition-all cursor-pointer shadow-sm"
                   >
                     Enter Live Center
@@ -374,13 +362,7 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
-      ) : (
-        <EmptyState
-          title="No Active Elections Set"
-          description="The Electoral Commission has not created or launched an election draft in the system yet. Please check back later."
-        />
       )}
     </div>
   );
 }
-

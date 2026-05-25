@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useQuery, useMutation } from 'convex/react';
+import { useParams, useRouter } from 'next/navigation';
 import { useIsMounted } from '@/hooks/useIsMounted';
 import { createPortal } from 'react-dom';
-import { useAuthContext } from '@/features/auth/mockAuth';
-import { useNavigation } from '@/features/auth/navigation';
+import { api } from '../../../../convex/_generated/api';
+import type { Id } from '../../../../convex/_generated/dataModel';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   ArrowLeft01Icon,
@@ -19,24 +21,52 @@ import {
   AlertCircleIcon,
 } from '@hugeicons/core-free-icons';
 
+const ACTION_LABELS: Record<string, string> = {
+  early_close: 'Voting closed early by EC',
+  publish: 'Results published by EC',
+  activate: 'Election activated',
+  mark_ready: 'Election marked ready',
+};
+
 export default function LiveDashboardPage() {
-  const { elections, users, voteRecords, actionLog, updateElectionStatus, addActionLog } =
-    useAuthContext();
-  const { navigateTo, params } = useNavigation();
+  const params = useParams();
+  const router = useRouter();
+  const isMounted = useIsMounted();
 
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [showPublishConfirm, setShowPublishConfirm] = useState(false);
-  const isMounted = useIsMounted();
+  const [isClosing, setIsClosing] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [actionError, setActionError] = useState('');
 
-  const electId = params.id;
-  const election = elections.find((e) => e.id === electId);
+  const electionId = params.id as Id<'elections'>;
+
+  const election = useQuery(api.elections.getElection, { electionId });
+  const results = useQuery(api.results.electionResults, { electionId });
+  const turnout = useQuery(api.ec_actions.getTurnout, { electionId });
+  const ecActions = useQuery(api.ec_actions.getRecentEcActions, { electionId });
+  const auditLog = useQuery(
+    api.ec_actions.auditLogExport,
+    election && ['closed', 'published'].includes(election.status) ? { electionId } : 'skip',
+  );
+
+  const earlyClose = useMutation(api.ec_actions.earlyClose);
+  const publishElection = useMutation(api.ec_actions.publishElection);
+
+  if (election === undefined) {
+    return (
+      <div className="flex items-center justify-center min-h-64">
+        <div className="h-6 w-6 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!election) {
     return (
       <div className="py-12 text-center max-w-sm mx-auto px-4 space-y-4">
         <p className="text-xs text-muted-foreground">Live tracker record not found.</p>
         <button
-          onClick={() => navigateTo('/admin/elections')}
+          onClick={() => router.push('/admin/elections')}
           className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium"
         >
           Return
@@ -45,61 +75,71 @@ export default function LiveDashboardPage() {
     );
   }
 
-  const registeredStudentsCount = users.filter(
-    (u) => u.role === 'Student' || u.role === 'Candidate'
-  ).length;
-  const uniqueVoterIds = new Set(
-    voteRecords
-      .filter((r) => election.categories.some((c) => c.id === r.categoryId))
-      .map((r) => r.voterId)
-  );
-  const votedTurnoutCount = uniqueVoterIds.size;
-  const turnoutPercent =
-    registeredStudentsCount > 0
-      ? Math.round((votedTurnoutCount / registeredStudentsCount) * 100)
-      : 0;
-  const isElectionActive = election.status === 'Active';
+  const uniqueVoters = turnout?.uniqueVoters ?? 0;
+  const registeredCount = turnout?.registeredCount ?? 0;
+  const turnoutPercent = registeredCount > 0 ? Math.round((uniqueVoters / registeredCount) * 100) : 0;
+  const resultCategories = results?.status === 'ok' ? results.categories : [];
 
-  const handleCloseEarly = () => {
-    updateElectionStatus(election.id, 'Closed');
-    setShowCloseConfirm(false);
+  const handleCloseEarly = async () => {
+    setIsClosing(true);
+    setActionError('');
+    try {
+      await earlyClose({ electionId });
+      setShowCloseConfirm(false);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to close election.');
+    } finally {
+      setIsClosing(false);
+    }
   };
 
-  const handlePublishResults = () => {
-    updateElectionStatus(election.id, 'Published');
-    setShowPublishConfirm(false);
+  const handlePublishResults = async () => {
+    setIsPublishing(true);
+    setActionError('');
+    try {
+      await publishElection({ electionId });
+      setShowPublishConfirm(false);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to publish results.');
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   const handleExportCSV = () => {
     try {
-      let csvContent = `COMPSSA ELECTION SYSTEM AUDIT JOURNAL\n`;
-      csvContent += `Election Title,${election.title}\n`;
-      csvContent += `Status,${election.status}\n`;
-      csvContent += `Turnout Rate,${turnoutPercent}% (${votedTurnoutCount} of ${registeredStudentsCount})\n`;
-      csvContent += `Export Timestamp,${new Date().toISOString()}\n\n`;
-      csvContent += `CATEGORY,CANDIDATE ID,CANDIDATE NAME,VOTES COUNT\n`;
-      election.categories.forEach((cat) => {
-        cat.candidates.forEach((cand) => {
-          csvContent += `"${cat.name}","${cand.id}","${cand.name}",${cand.votes}\n`;
+      let csv = `COMPSSA ELECTION SYSTEM AUDIT JOURNAL\n`;
+      csv += `Election Title,${election.title}\n`;
+      csv += `Status,${election.status}\n`;
+      csv += `Turnout Rate,${turnoutPercent}% (${uniqueVoters} of ${registeredCount})\n`;
+      csv += `Export Timestamp,${new Date().toISOString()}\n\n`;
+      csv += `CATEGORY,CANDIDATE ID,CANDIDATE NAME,VOTE COUNT\n`;
+      resultCategories.forEach((cat) => {
+        [...cat.candidates]
+          .sort((a, b) => b.count - a.count)
+          .forEach((cand) => {
+            csv += `"${cat.name}","${cand._id}","${cand.userName}",${cand.count}\n`;
+          });
+      });
+      if (auditLog?.length) {
+        csv += `\nANONYMISED VOTER AUDIT LOG\n`;
+        csv += `Timestamp,Voter Pseudonym,Category ID\n`;
+        auditLog.forEach((r) => {
+          const masked = `VTR_${String(r.studentId).slice(-6)}`;
+          csv += `"${new Date(r.timestamp).toISOString()}","${masked}","${r.categoryId}"\n`;
         });
-      });
-      csvContent += `\nINDEPENDENT AUDIT VOTING RECORDS LOG\n`;
-      csvContent += `Timestamp,Voter Pseudonym Record ID,Category ID,Candidate ID Selected\n`;
-      voteRecords.forEach((r) => {
-        const maskedVoter = `VTR_${r.voterId.replace(/[^0-9]/g, '') || '999'}`;
-        csvContent += `"${r.timestamp}","${maskedVoter}","${r.categoryId}","${r.candidateId}"\n`;
-      });
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      }
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.setAttribute('href', url);
-      link.setAttribute('download', `COMPSSA_Election_${election.id}_Audit_Report.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      addActionLog('Exported certified audit log spreadsheets.');
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `COMPSSA_Election_Audit_${electionId}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     } catch (e) {
-      console.error('CSV generation failure', e);
+      console.error('CSV export failed', e);
     }
   };
 
@@ -110,7 +150,7 @@ export default function LiveDashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-border">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigateTo('/admin/elections')}
+            onClick={() => router.push('/admin/elections')}
             className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-all"
           >
             <HugeiconsIcon icon={ArrowLeft01Icon} className="h-4.5 w-4.5" />
@@ -124,7 +164,7 @@ export default function LiveDashboardPage() {
         </div>
 
         <div className="flex gap-2 shrink-0 flex-wrap">
-          {election.status === 'Active' && (
+          {election.status === 'active' && (
             <button
               onClick={() => setShowCloseConfirm(true)}
               className="px-4 py-2 text-xs font-semibold text-destructive-foreground bg-destructive hover:bg-destructive/90 rounded-xl shadow-sm flex items-center gap-1.5 transition-all"
@@ -134,7 +174,7 @@ export default function LiveDashboardPage() {
             </button>
           )}
 
-          {election.status === 'Closed' && (
+          {election.status === 'closed' && (
             <button
               onClick={() => setShowPublishConfirm(true)}
               className="px-5 py-2.5 text-xs font-semibold text-white rounded-xl shadow-sm flex items-center gap-1.5 transition-all"
@@ -145,7 +185,7 @@ export default function LiveDashboardPage() {
             </button>
           )}
 
-          {['Closed', 'Published'].includes(election.status) && (
+          {['closed', 'published'].includes(election.status) && (
             <button
               onClick={handleExportCSV}
               className="px-4 py-2 text-xs font-semibold text-primary bg-primary/8 hover:bg-primary/15 border border-primary/20 rounded-xl flex items-center gap-1.5 transition-all"
@@ -155,9 +195,9 @@ export default function LiveDashboardPage() {
             </button>
           )}
 
-          {election.status === 'Published' && (
+          {election.status === 'published' && (
             <button
-              onClick={() => navigateTo(`/results/${election.id}`)}
+              onClick={() => router.push(`/results/${electionId}`)}
               className="px-4 py-2 text-xs font-semibold text-foreground bg-card border border-border rounded-xl hover:bg-muted transition-all"
             >
               View Public Page →
@@ -166,6 +206,10 @@ export default function LiveDashboardPage() {
         </div>
       </div>
 
+      {actionError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl text-xs">{actionError}</div>
+      )}
+
       {/* Stats row */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <div className="bg-card border border-border rounded-xl p-5 space-y-1">
@@ -173,7 +217,7 @@ export default function LiveDashboardPage() {
             <HugeiconsIcon icon={UserGroupIcon} className="h-4 w-4" />
             Eligible Board
           </div>
-          <p className="text-2xl font-mono font-extrabold text-foreground">{registeredStudentsCount}</p>
+          <p className="text-2xl font-mono font-extrabold text-foreground">{registeredCount}</p>
           <p className="text-[10px] text-muted-foreground">Registered department electors</p>
         </div>
 
@@ -182,7 +226,7 @@ export default function LiveDashboardPage() {
             <HugeiconsIcon icon={CheckmarkCircle01Icon} className="h-4 w-4 text-[#10b981]" />
             Ballots Sealed
           </div>
-          <p className="text-2xl font-mono font-extrabold text-foreground">{votedTurnoutCount}</p>
+          <p className="text-2xl font-mono font-extrabold text-foreground">{uniqueVoters}</p>
           <p className="text-[10px] text-muted-foreground">Unique students who voted</p>
         </div>
 
@@ -207,62 +251,68 @@ export default function LiveDashboardPage() {
       <div className="space-y-5">
         <div className="flex items-center justify-between">
           <h3 className="font-sans font-semibold text-sm text-foreground">Position Tally Arrays</h3>
-          <span className="text-[10px] font-mono text-muted-foreground animate-pulse">
-            ● Autoupdates live
-          </span>
+          <span className="text-[10px] font-mono text-muted-foreground animate-pulse">● Autoupdates live</span>
         </div>
 
-        {election.categories.map((cat) => {
-          const candidatesSorted = [...cat.candidates].sort((a, b) => b.votes - a.votes);
-          const totalCatVotes = cat.candidates.reduce((acc, c) => acc + c.votes, 0);
+        {resultCategories.length === 0 ? (
+          <div className="bg-card border border-dashed border-border rounded-2xl p-8 text-center">
+            <p className="text-xs text-muted-foreground">
+              {results === undefined ? 'Loading results…' : 'No tally data available yet.'}
+            </p>
+          </div>
+        ) : (
+          resultCategories.map((cat) => {
+            const sorted = [...cat.candidates].sort((a, b) => b.count - a.count);
+            const totalCatVotes = cat.candidates.reduce((acc, c) => acc + c.count, 0);
 
-          return (
-            <div key={cat.id} className="bg-card border border-border p-6 rounded-2xl space-y-4">
-              <div>
-                <h4 className="font-sans font-bold text-sm text-foreground">{cat.name}</h4>
-                <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
-                  Total votes cast: {totalCatVotes}
-                </p>
-              </div>
+            return (
+              <div key={cat._id} className="bg-card border border-border p-6 rounded-2xl space-y-4">
+                <div>
+                  <h4 className="font-sans font-bold text-sm text-foreground">{cat.name}</h4>
+                  <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
+                    Total votes cast: {totalCatVotes}
+                  </p>
+                </div>
 
-              <div className="space-y-4 select-text">
-                {candidatesSorted.map((cand, idx) => {
-                  const pct = totalCatVotes > 0 ? Math.round((cand.votes / totalCatVotes) * 100) : 0;
-                  const isLeader = idx === 0 && cand.votes > 0 && !isElectionActive;
+                <div className="space-y-4 select-text">
+                  {sorted.map((cand, idx) => {
+                    const pct = totalCatVotes > 0 ? Math.round((cand.count / totalCatVotes) * 100) : 0;
+                    const isLeader = idx === 0 && cand.count > 0 && election.status !== 'active';
 
-                  return (
-                    <div key={cand.id} className="space-y-1.5">
-                      <div className="flex justify-between text-xs items-center">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-mono font-bold text-muted-foreground">{idx + 1}.</span>
-                          <span className="font-semibold text-foreground">{cand.name}</span>
-                          {isLeader && (
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-extrabold text-[#92400e] bg-[#fef3c7] border border-[#fcd34d] rounded font-mono uppercase leading-none">
-                              <HugeiconsIcon icon={SparklesIcon} className="h-2.5 w-2.5" />
-                              Leader
-                            </span>
-                          )}
+                    return (
+                      <div key={cand._id} className="space-y-1.5">
+                        <div className="flex justify-between text-xs items-center">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono font-bold text-muted-foreground">{idx + 1}.</span>
+                            <span className="font-semibold text-foreground">{cand.userName}</span>
+                            {isLeader && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-extrabold text-[#92400e] bg-[#fef3c7] border border-[#fcd34d] rounded font-mono uppercase leading-none">
+                                <HugeiconsIcon icon={SparklesIcon} className="h-2.5 w-2.5" />
+                                Leader
+                              </span>
+                            )}
+                          </div>
+                          <div className="font-mono text-muted-foreground">
+                            <strong className="text-foreground">{cand.count}</strong> votes ({pct}%)
+                          </div>
                         </div>
-                        <div className="font-mono text-muted-foreground">
-                          <strong className="text-foreground">{cand.votes}</strong> votes ({pct}%)
+                        <div className="h-3.5 w-full bg-muted rounded-md overflow-hidden">
+                          <div
+                            className="h-full rounded-md transition-all duration-300"
+                            style={{
+                              width: `${pct || 1}%`,
+                              backgroundColor: isLeader ? '#f59e0b' : 'var(--color-primary)',
+                            }}
+                          />
                         </div>
                       </div>
-                      <div className="h-3.5 w-full bg-muted rounded-md overflow-hidden">
-                        <div
-                          className="h-full rounded-md transition-all duration-300"
-                          style={{
-                            width: `${pct || 1}%`,
-                            backgroundColor: isLeader ? '#f59e0b' : 'var(--color-primary)',
-                          }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
 
       {/* Action log */}
@@ -272,17 +322,23 @@ export default function LiveDashboardPage() {
           <h4 className="font-sans font-bold text-xs text-foreground">EC Administrative Action Log</h4>
         </div>
         <div className="space-y-3 max-h-40 overflow-y-auto no-scrollbar">
-          {actionLog.map((log) => (
-            <div
-              key={log.id}
-              className="flex justify-between items-start text-xs text-foreground/80 border-b border-border/50 pb-2 last:border-b-0 last:pb-0"
-            >
-              <span className="leading-relaxed font-sans">{log.action}</span>
-              <span className="font-mono text-[9px] text-muted-foreground shrink-0 uppercase pl-4">
-                {log.timestamp.replace('T', ' ').slice(11, 16)} UTC
-              </span>
-            </div>
-          ))}
+          {!ecActions || ecActions.length === 0 ? (
+            <p className="text-xs text-muted-foreground">No actions recorded.</p>
+          ) : (
+            ecActions.map((log) => (
+              <div
+                key={log._id}
+                className="flex justify-between items-start text-xs text-foreground/80 border-b border-border/50 pb-2 last:border-b-0 last:pb-0"
+              >
+                <span className="leading-relaxed font-sans">
+                  {ACTION_LABELS[log.action] ?? log.action}
+                </span>
+                <span className="font-mono text-[9px] text-muted-foreground shrink-0 uppercase pl-4">
+                  {new Date(log.timestamp).toISOString().replace('T', ' ').slice(11, 16)} UTC
+                </span>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
@@ -302,18 +358,21 @@ export default function LiveDashboardPage() {
                 </p>
               </div>
             </div>
+            {actionError && <p className="text-xs text-red-600">{actionError}</p>}
             <div className="flex gap-2">
               <button
+                disabled={isClosing}
                 onClick={() => setShowCloseConfirm(false)}
                 className="flex-1 px-4 py-2.5 text-sm font-medium text-foreground border border-border rounded-xl hover:bg-muted transition-all"
               >
                 Cancel
               </button>
               <button
+                disabled={isClosing}
                 onClick={handleCloseEarly}
-                className="flex-1 px-4 py-2.5 text-sm font-semibold text-destructive-foreground bg-destructive hover:bg-destructive/90 rounded-xl transition-all"
+                className="flex-1 px-4 py-2.5 text-sm font-semibold text-destructive-foreground bg-destructive hover:bg-destructive/90 rounded-xl transition-all disabled:opacity-60"
               >
-                Close Election
+                {isClosing ? 'Closing…' : 'Close Election'}
               </button>
             </div>
           </div>
@@ -326,7 +385,10 @@ export default function LiveDashboardPage() {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-[200] animate-fade-in">
           <div className="bg-card border border-border rounded-2xl w-full max-w-sm p-6 space-y-5 shadow-2xl">
             <div className="flex items-start gap-3">
-              <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: 'color-mix(in oklch, var(--status-published) 15%, transparent)' }}>
+              <div
+                className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0"
+                style={{ backgroundColor: 'color-mix(in oklch, var(--status-published) 15%, transparent)' }}
+              >
                 <HugeiconsIcon icon={Megaphone01Icon} className="h-5 w-5" style={{ color: 'var(--status-published)' }} />
               </div>
               <div>
@@ -338,19 +400,22 @@ export default function LiveDashboardPage() {
                 </p>
               </div>
             </div>
+            {actionError && <p className="text-xs text-red-600">{actionError}</p>}
             <div className="flex gap-2">
               <button
+                disabled={isPublishing}
                 onClick={() => setShowPublishConfirm(false)}
                 className="flex-1 px-4 py-2.5 text-sm font-medium text-foreground border border-border rounded-xl hover:bg-muted transition-all"
               >
                 Cancel
               </button>
               <button
+                disabled={isPublishing}
                 onClick={handlePublishResults}
-                className="flex-1 px-4 py-2.5 text-sm font-semibold text-white rounded-xl transition-all"
+                className="flex-1 px-4 py-2.5 text-sm font-semibold text-white rounded-xl transition-all disabled:opacity-60"
                 style={{ backgroundColor: 'var(--status-published)' }}
               >
-                Publish Now
+                {isPublishing ? 'Publishing…' : 'Publish Now'}
               </button>
             </div>
           </div>

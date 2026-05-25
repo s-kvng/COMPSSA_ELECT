@@ -55,9 +55,14 @@ export const castVote = mutation({
   },
 });
 
-export const myVotingProgress = query({
+export const getMyVotes = query({
   args: { electionId: v.id("elections") },
-  returns: v.array(v.id("categories")),
+  returns: v.array(
+    v.object({
+      categoryId: v.id("categories"),
+      candidateId: v.id("candidates"),
+    }),
+  ),
   handler: async (ctx, args) => {
     const user = await getUser(ctx);
     const votes = await ctx.db
@@ -65,7 +70,10 @@ export const myVotingProgress = query({
       .withIndex("by_voter_election", (q) =>
         q.eq("studentId", user._id).eq("electionId", args.electionId),
       )
-      .collect();
-    return votes.map((row) => row.categoryId);
+      .take(100);
+    return votes.map((row) => ({
+      categoryId: row.categoryId,
+      candidateId: row.candidateId,
+    }));
   },
 });
