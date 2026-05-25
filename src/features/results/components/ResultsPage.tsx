@@ -8,7 +8,8 @@
 import React from 'react';
 import { useAuthContext } from '@/features/auth/mockAuth';
 import { useNavigation } from '@/features/auth/navigation';
-import { Award, Clock, Sparkles, CheckCircle2, ChevronLeft } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Award01Icon, Clock01Icon, SparklesIcon, CheckmarkCircle01Icon, ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 
 export default function ResultsPage() {
   const { elections, currentUser } = useAuthContext();
@@ -38,7 +39,7 @@ export default function ResultsPage() {
             onClick={() => navigateTo(currentUser ? '/dashboard' : '/')}
             className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 cursor-pointer"
           >
-            <ChevronLeft className="h-4.5 w-4.5" />
+            <HugeiconsIcon icon={ArrowLeft01Icon} className="h-4.5 w-4.5" />
             <span>{currentUser ? 'Return to Dashboard' : 'Back to Home Information'}</span>
           </button>
           
@@ -50,7 +51,7 @@ export default function ResultsPage() {
         {/* Visual Header card */}
         <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-3xs text-center space-y-4">
           <div className="inline-flex bg-purple-50 text-purple-700 p-2.5 rounded-xl border border-purple-100 mb-1">
-            <Award className="h-6 w-6" />
+            <HugeiconsIcon icon={Award01Icon} className="h-6 w-6" />
           </div>
           <div className="space-y-1">
             <span className="text-[10px] font-mono text-purple-600 uppercase tracking-widest font-black">Official Certified Ballot Results</span>
@@ -63,7 +64,7 @@ export default function ResultsPage() {
           <div className="space-y-6">
             {/* Success validation */}
             <div className="bg-emerald-50 border border-emerald-100 p-5 rounded-2xl flex items-start gap-4 text-emerald-800 shadow-3xs">
-              <CheckCircle2 className="h-10 w-10 text-emerald-600 shrink-0 mt-0.5" />
+              <HugeiconsIcon icon={CheckmarkCircle01Icon} className="h-10 w-10 text-emerald-600 shrink-0 mt-0.5" />
               <div className="space-y-1">
                 <h4 className="font-display font-bold text-sm">Electoral Commission Verification Confirmed</h4>
                 <p className="text-xs text-emerald-600 leading-normal">
@@ -102,7 +103,7 @@ export default function ResultsPage() {
                                 </span>
                                 {isWinner && (
                                   <span className="inline-flex items-center gap-0.5 px-2 py-0.5 text-[9px] font-extrabold text-amber-700 bg-amber-50 border border-amber-250 rounded-full font-mono uppercase leading-none">
-                                    <Sparkles className="h-2.5 w-2.5" />
+                                    <HugeiconsIcon icon={SparklesIcon} className="h-2.5 w-2.5" />
                                     Winner
                                   </span>
                                 )}
@@ -130,7 +131,7 @@ export default function ResultsPage() {
         ) : (
           /* Locked results state */
           <div className="bg-white border rounded-2xl p-8 text-center space-y-4 max-w-md mx-auto shadow-3xs">
-            <Clock className="h-10 w-10 text-amber-500 mx-auto animate-pulse" />
+            <HugeiconsIcon icon={Clock01Icon} className="h-10 w-10 text-amber-500 mx-auto animate-pulse" />
             <div className="space-y-1">
               <h3 className="font-display font-bold text-base text-slate-850">Voting Tallies Sealed</h3>
               <p className="text-xs text-slate-500 leading-relaxed">

@@ -1,13 +1,16 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 'use client';
 
 import React, { useState } from 'react';
+import { useIsMounted } from '@/hooks/useIsMounted';
+import { createPortal } from 'react-dom';
 import { useAuthContext } from '@/features/auth/mockAuth';
-import { Search, Plus, UploadCloud, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import {
+  Search01Icon,
+  Upload01Icon,
+  Alert01Icon,
+  CheckmarkCircle01Icon,
+} from '@hugeicons/core-free-icons';
 
 export default function StudentsPage() {
   const { users, importStudents } = useAuthContext();
@@ -15,67 +18,56 @@ export default function StudentsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showImportModal, setShowImportModal] = useState(false);
   const [csvText, setCsvText] = useState(
-    "name,studentId,email\n" +
-    "John Doe,COMP-501,john@compssa.org\n" +
-    "Mary Jane,COMP-502,mary@compssa.org\n" +
-    "Yaw Appiah,COMP-503,yaw@compssa.org"
+    'name,studentId,email\nJohn Doe,COMP-501,john@compssa.org\nMary Jane,COMP-502,mary@compssa.org\nYaw Appiah,COMP-503,yaw@compssa.org'
   );
+  const [parseError, setParseError] = useState<string | null>(null);
   const [importResult, setImportResult] = useState<{
     successCount: number;
     errors: string[];
     credentialsCsv?: string;
   } | null>(null);
+  const isMounted = useIsMounted();
 
-  // Filter students out of standard list (hiding HOD/EC if needed, or including all)
-  const studentList = users.filter(u => u.role === 'Student' || u.role === 'Candidate');
+  const studentList = users.filter((u) => u.role === 'Student' || u.role === 'Candidate');
 
-  const filteredStudents = studentList.filter(student => {
-    const query = searchQuery.toLowerCase().trim();
+  const filteredStudents = studentList.filter((s) => {
+    const q = searchQuery.toLowerCase().trim();
     return (
-      student.name.toLowerCase().includes(query) ||
-      student.studentId.toLowerCase().includes(query) ||
-      student.email.toLowerCase().includes(query)
+      s.name.toLowerCase().includes(q) ||
+      s.studentId.toLowerCase().includes(q) ||
+      s.email.toLowerCase().includes(q)
     );
   });
 
   const handleBulkImportSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setParseError(null);
     setImportResult(null);
 
-    // Basic client parsing
-    const lines = csvText.split('\n').map(l => l.trim()).filter(Boolean);
+    const lines = csvText.split('\n').map((l) => l.trim()).filter(Boolean);
     if (lines.length <= 1) {
-      alert('The CSV input is empty or missing data rows.');
+      setParseError('CSV is empty or has no data rows below the header.');
       return;
     }
 
-    // Check header
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
     const nameIdx = headers.indexOf('name');
     const idIdx = headers.indexOf('studentid');
     const emailIdx = headers.indexOf('email');
 
     if (nameIdx === -1 || idIdx === -1 || emailIdx === -1) {
-      alert('Error: CSV must include a header row with "name, studentId, email" columns.');
+      setParseError('Header row must contain "name", "studentId", and "email" columns.');
       return;
     }
 
-    const compiledStudentsList: Partial<typeof users[0]>[] = [];
-
+    const compiled: Partial<typeof users[0]>[] = [];
     for (let i = 1; i < lines.length; i++) {
-      const columns = lines[i].split(',').map(col => col.trim().replace(/^"|"$/g, ''));
-      if (columns.length < 3) continue;
-
-      compiledStudentsList.push({
-        name: columns[nameIdx],
-        studentId: columns[idIdx],
-        email: columns[emailIdx],
-        role: 'Student'
-      });
+      const cols = lines[i].split(',').map((c) => c.trim().replace(/^"|"$/g, ''));
+      if (cols.length < 3) continue;
+      compiled.push({ name: cols[nameIdx], studentId: cols[idIdx], email: cols[emailIdx], role: 'Student' });
     }
 
-    const res = importStudents(compiledStudentsList);
-    setImportResult(res);
+    setImportResult(importStudents(compiled));
   };
 
   const downloadCredentialFile = () => {
@@ -84,94 +76,99 @@ export default function StudentsPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `Imported_Student_Credentials.csv`);
+    link.setAttribute('download', 'Imported_Student_Credentials.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
+  const closeModal = () => {
+    setShowImportModal(false);
+    setParseError(null);
+    setImportResult(null);
+  };
+
   return (
-    <div id="students-panel" className="space-y-6 font-sans py-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full animate-fade-in select-none">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+    <div className="space-y-6 font-sans py-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full animate-fade-in select-none">
+
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-border">
         <div className="space-y-1">
-          <h2 className="font-display font-extrabold text-2xl text-slate-900 font-bold">Students Registry</h2>
-          <p className="text-xs text-slate-500">Register administrative voters, configure credentials and audit active profiles.</p>
+          <h2 className="font-sans font-bold text-2xl text-foreground">Students Registry</h2>
+          <p className="text-xs text-muted-foreground">
+            Register administrative voters, configure credentials and audit active profiles.
+          </p>
         </div>
         <button
-          onClick={() => {
-            setImportResult(null);
-            setShowImportModal(true);
-          }}
-          className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg flex items-center gap-1.5 cursor-pointer shadow-xs"
+          onClick={() => { setImportResult(null); setParseError(null); setShowImportModal(true); }}
+          className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold px-4 py-2.5 rounded-xl flex items-center gap-1.5 shadow-sm transition-all shrink-0"
         >
-          <UploadCloud className="h-4.5 w-4.5" />
-          <span>Bulk Import CSV</span>
+          <HugeiconsIcon icon={Upload01Icon} className="h-4 w-4" />
+          Bulk Import CSV
         </button>
       </div>
 
-      {/* Stats and Search bar Row */}
-      <div className="flex flex-col sm:flex-row gap-3 select-all">
-        <div className="relative flex-grow">
+      {/* Search + count */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-slate-400" />
+            <HugeiconsIcon icon={Search01Icon} className="h-4 w-4 text-muted-foreground" />
           </div>
           <input
             type="text"
-            required
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="block w-full pl-9 pr-3 py-2 text-xs border border-slate-200 bg-white rounded-lg focus:ring-1 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-            placeholder="Search students by name, ID or email..."
+            className="block w-full pl-9 pr-3 py-2 text-xs border border-border bg-input rounded-lg focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none font-sans"
+            placeholder="Search by name, ID or email…"
           />
         </div>
-        <div className="bg-slate-100 border text-slate-700 text-xs font-semibold px-3 py-2 rounded-lg flex items-center justify-center shrink-0">
-          <span>Student registry count: <strong className="text-slate-900 font-bold ml-1">{studentList.length}</strong></span>
+        <div className="bg-muted border border-border text-muted-foreground text-xs font-semibold px-4 py-2 rounded-lg flex items-center justify-center shrink-0">
+          Registry count: <strong className="text-foreground ml-1">{studentList.length}</strong>
         </div>
       </div>
 
-      {/* Roster Table Grid */}
-      <div className="bg-white border rounded-2xl overflow-hidden shadow-3xs select-text">
-        <div className="overflow-x-auto custom-scrollbar">
+      {/* Table */}
+      <div className="bg-card border border-border rounded-2xl overflow-hidden select-text">
+        <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-100 text-slate-400 font-mono text-[10px] uppercase">
-                <th className="px-6 py-4 font-bold">Student Name</th>
-                <th className="px-6 py-4 font-bold">Student ID</th>
-                <th className="px-6 py-4 font-bold">Email Reference</th>
-                <th className="px-6 py-4 font-bold">Active Role</th>
-                <th className="px-6 py-4 font-bold">Portal Password Change</th>
+              <tr className="bg-muted/50 border-b border-border text-muted-foreground font-mono text-[10px] uppercase">
+                <th className="px-5 py-3.5 font-bold">Student Name</th>
+                <th className="px-5 py-3.5 font-bold">Student ID</th>
+                <th className="px-5 py-3.5 font-bold">Email</th>
+                <th className="px-5 py-3.5 font-bold">Role</th>
+                <th className="px-5 py-3.5 font-bold">Password Setup</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-border">
               {filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center text-slate-400">
+                  <td colSpan={5} className="py-14 text-center text-muted-foreground text-xs">
                     No matching student profiles found.
                   </td>
                 </tr>
               ) : (
                 filteredStudents.map((u) => (
-                  <tr key={u.id} className="hover:bg-slate-50/40">
-                    <td className="px-6 py-4 font-semibold text-slate-900">{u.name}</td>
-                    <td className="px-6 py-4 font-mono text-slate-500">{u.studentId}</td>
-                    <td className="px-6 py-4 text-slate-500">{u.email}</td>
-                    <td className="px-6 py-4 text-slate-550 font-medium">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${
+                  <tr key={u.id} className="hover:bg-muted/30 transition-colors">
+                    <td className="px-5 py-3.5 font-semibold text-foreground">{u.name}</td>
+                    <td className="px-5 py-3.5 font-mono text-muted-foreground">{u.studentId}</td>
+                    <td className="px-5 py-3.5 text-muted-foreground">{u.email}</td>
+                    <td className="px-5 py-3.5">
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
                         u.role === 'Candidate'
-                          ? 'bg-amber-50 text-amber-700 border-amber-100'
-                          : 'bg-slate-100 text-slate-600 border-slate-200'
+                          ? 'bg-[#fef3c7] text-[#92400e] border-[#fcd34d]'
+                          : 'bg-muted text-muted-foreground border-border'
                       }`}>
                         {u.role}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-5 py-3.5">
                       {u.firstLoginPending ? (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-semibold text-amber-700 bg-amber-50 rounded-full border border-amber-200 font-mono">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold text-[#92400e] bg-[#fef3c7] rounded-full border border-[#fcd34d] font-mono">
                           ● Pending
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-semibold text-green-700 bg-green-50 rounded-full border border-green-200 font-mono">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold text-[#065f46] bg-[#d1fae5] rounded-full border border-[#6ee7b7] font-mono">
                           ✓ Completed
                         </span>
                       )}
@@ -184,45 +181,48 @@ export default function StudentsPage() {
         </div>
       </div>
 
-      {/* Bulk CSV Import Modal Sheet - INTUATIVE DESIGN COPIER */}
-      {showImportModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white border rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-xl text-left">
-            <h3 className="font-display font-extrabold text-base text-slate-900">Bulk Import Student Profiles</h3>
-            <p className="text-xs text-slate-500 leading-normal">
-              Provide csv row lines. Format: columns must contain a header row specifying <strong>name, studentId, email</strong>.
-            </p>
+      {/* Bulk import modal — portal so it covers full viewport */}
+      {showImportModal && isMounted && createPortal(
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-[200] animate-fade-in">
+          <div className="bg-card border border-border rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
+            <div>
+              <h3 className="font-sans font-bold text-base text-foreground">Bulk Import Students</h3>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                Paste CSV rows below. Header must include{' '}
+                <code className="font-mono text-primary text-[11px]">name, studentId, email</code>.
+              </p>
+            </div>
 
             {importResult ? (
-              <div className="space-y-4 font-sans border-t pt-2">
+              <div className="space-y-4">
                 {importResult.successCount > 0 && (
-                  <div className="bg-green-50 border border-green-200 p-4 rounded-xl flex flex-col gap-3">
-                    <div className="flex gap-2.5 items-center text-green-800 text-xs">
-                      <ShieldCheck className="h-5 w-5 text-green-600" />
+                  <div className="bg-[#d1fae5] border border-[#6ee7b7] p-4 rounded-xl space-y-3">
+                    <div className="flex gap-2.5 items-center text-[#065f46] text-xs">
+                      <HugeiconsIcon icon={CheckmarkCircle01Icon} className="h-5 w-5 shrink-0" />
                       <span>
-                        Successfully loaded <strong>{importResult.successCount}</strong> new students records.
+                        <strong>{importResult.successCount}</strong> student{importResult.successCount > 1 ? 's' : ''} imported successfully.
                       </span>
                     </div>
-
                     <button
                       onClick={downloadCredentialFile}
-                      className="inline-flex items-center justify-center gap-1.5 text-xs text-white bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-semibold cursor-pointer"
+                      className="w-full py-2 text-xs font-semibold text-white rounded-lg transition-all"
+                      style={{ backgroundColor: 'var(--color-success)' }}
                     >
-                      <span>Download Temporary Credentials CSV</span>
+                      Download Credentials CSV
                     </button>
-                    <p className="text-[10px] text-green-600 leading-normal">
-                      Downloading this sheet provides default secure start passwords corresponding to each imported student ID.
+                    <p className="text-[10px] text-[#047857] leading-relaxed">
+                      Contains the default login passwords for each imported student.
                     </p>
                   </div>
                 )}
 
                 {importResult.errors.length > 0 && (
-                  <div className="bg-red-50 border border-red-200 p-4 rounded-xl space-y-2">
-                    <div className="flex gap-2 items-center text-red-800 text-xs font-bold">
-                      <AlertTriangle className="h-4.5 w-4.5 text-red-600" />
-                      <span>Validation Errors found ({importResult.errors.length})</span>
+                  <div className="bg-destructive/8 border border-destructive/20 p-4 rounded-xl space-y-2">
+                    <div className="flex gap-2 items-center text-destructive text-xs font-semibold">
+                      <HugeiconsIcon icon={Alert01Icon} className="h-4 w-4 shrink-0" />
+                      {importResult.errors.length} validation error{importResult.errors.length > 1 ? 's' : ''}
                     </div>
-                    <div className="max-h-24 overflow-y-auto custom-scrollbar pr-2 text-[10px] space-y-1 font-mono text-red-700">
+                    <div className="max-h-28 overflow-y-auto no-scrollbar text-[10px] space-y-1 font-mono text-destructive/80">
                       {importResult.errors.map((err, i) => (
                         <div key={i}>• {err}</div>
                       ))}
@@ -230,47 +230,54 @@ export default function StudentsPage() {
                   </div>
                 )}
 
-                <div className="flex justify-end pt-2">
+                <div className="flex justify-end">
                   <button
-                    onClick={() => setShowImportModal(false)}
-                    className="px-4 py-2 bg-slate-950 text-white rounded-lg text-xs font-semibold cursor-pointer"
+                    onClick={closeModal}
+                    className="px-4 py-2.5 text-sm font-medium text-foreground border border-border rounded-xl hover:bg-muted transition-all"
                   >
-                    Close Portal
+                    Close
                   </button>
                 </div>
               </div>
             ) : (
               <form onSubmit={handleBulkImportSubmit} className="space-y-4">
+                {parseError && (
+                  <div className="flex gap-2 items-start p-3 bg-destructive/8 border border-destructive/20 rounded-xl text-xs text-destructive">
+                    <HugeiconsIcon icon={Alert01Icon} className="h-4 w-4 shrink-0 mt-0.5" />
+                    {parseError}
+                  </div>
+                )}
+
                 <textarea
                   required
                   rows={8}
                   value={csvText}
-                  onChange={(e) => setCsvText(e.target.value)}
-                  className="block w-full px-3 py-2 text-xs border border-slate-200 bg-slate-50/50 rounded-md focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none font-mono"
+                  onChange={(e) => { setCsvText(e.target.value); setParseError(null); }}
+                  className="block w-full px-3 py-2.5 text-xs border border-border bg-input rounded-lg focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none resize-none font-mono leading-relaxed"
                   placeholder="name,studentId,email"
                 />
 
-                <div className="flex gap-2 justify-end pt-2">
+                <div className="flex gap-2 justify-end">
                   <button
                     type="button"
-                    onClick={() => setShowImportModal(false)}
-                    className="px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 border border-slate-200 rounded-md transition-all outline-none"
+                    onClick={closeModal}
+                    className="px-4 py-2.5 text-sm font-medium text-foreground border border-border rounded-xl hover:bg-muted transition-all"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm transition-all focus:ring-2 focus:ring-blue-500/20 outline-none cursor-pointer"
+                    className="px-5 py-2.5 text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary/90 rounded-xl shadow-sm transition-all"
                   >
-                    Perform Roster Import
+                    Import Students
                   </button>
                 </div>
               </form>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
 }
-

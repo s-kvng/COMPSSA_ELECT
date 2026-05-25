@@ -6,7 +6,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { User, Role, Election, Category, Candidate, VoteRecord, ActionLogEntry } from '@/lib/types';
+import type { User, Role, Election, VoteRecord, ActionLogEntry } from '@/lib/types';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -20,7 +20,7 @@ interface AuthContextType {
   logout: () => void;
   setMockRole: (role: Role) => void;
   resetDatabase: () => void;
-  completeFirstLogin: (newPassword?: string) => void;
+  completeFirstLogin: () => void;
   importStudents: (newStudents: Partial<User>[]) => { successCount: number; errors: string[]; credentialsCsv: string };
   registerVote: (categoryId: string, candidateId: string) => void;
   createElection: (title: string, description: string, startDate: string, endDate: string) => void;
@@ -97,6 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   // Initialize from LocalStorage or Seeds
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     try {
       const storedUsers = localStorage.getItem('compssa_users');
@@ -149,6 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
     }
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Save changes to LocalStorage helper
   const saveUsers = (newUsers: User[]) => {
@@ -259,7 +261,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Complete first login password change
-  const completeFirstLogin = (newPassword?: string) => {
+  const completeFirstLogin = () => {
     if (!currentUser) return;
     const updatedUsers = users.map(u => {
       if (u.id === currentUser.id) {

@@ -1,33 +1,23 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import Sidebar from "@/components/Sidebar"
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
+import { AppSidebar } from "@/components/app-sidebar"
+import { Separator } from "@/components/ui/separator"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
   return (
-    <div className="flex h-screen overflow-hidden">
-      {isMounted && (
-        <>
-          {/* Desktop sidebar - fixed */}
-          <div className="hidden md:flex md:w-64 md:flex-col md:flex-shrink-0">
-            <Sidebar />
-          </div>
-          {/* Mobile/Tablet overlay */}
-          <div className="md:hidden fixed inset-0 z-30 overflow-hidden hidden peer-checked:flex">
-            <Sidebar />
-          </div>
-        </>
-      )}
-      {/* Main content area */}
-      <main className="flex-1 overflow-auto flex flex-col">
-        {children}
-      </main>
-    </div>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <header className="flex h-12 shrink-0 items-center gap-2 border-b border-sidebar-border bg-sidebar sticky top-0 z-10 px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-1 data-[orientation=vertical]:h-4" />
+          <span className="text-xs font-mono font-semibold text-sidebar-foreground/50 uppercase tracking-wider select-none">
+            COMPSSA Elections
+          </span>
+        </header>
+        <main className="flex flex-1 flex-col">
+          {children}
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }

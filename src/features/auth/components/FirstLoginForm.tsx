@@ -8,7 +8,8 @@
 import React, { useState } from 'react';
 import { useAuthContext } from '@/features/auth/mockAuth';
 import { useNavigation } from '@/features/auth/navigation';
-import { KeyRound, ShieldAlert, Award, Lock } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Key01Icon, Alert01Icon, LockIcon } from '@hugeicons/core-free-icons';
 
 export default function FirstLoginForm() {
   const { completeFirstLogin, currentUser } = useAuthContext();
@@ -49,7 +50,7 @@ export default function FirstLoginForm() {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center mb-4">
           <div className="bg-amber-500 text-white p-2.5 rounded-xl shadow-md">
-            <KeyRound className="h-6 w-6" />
+            <HugeiconsIcon icon={Key01Icon} className="h-6 w-6" />
           </div>
         </div>
         <h2 className="text-center font-display font-extrabold text-2xl text-slate-900 leading-tight">
@@ -64,7 +65,7 @@ export default function FirstLoginForm() {
         <div className="bg-white py-8 px-4 border border-slate-200 rounded-xl shadow-xs sm:px-10">
           {errorMessage && (
             <div className="mb-4 bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg text-xs flex gap-2 items-start">
-              <ShieldAlert className="h-4.5 w-4.5 text-red-600 shrink-0 mt-0.5" />
+              <HugeiconsIcon icon={Alert01Icon} className="h-4.5 w-4.5 text-red-600 shrink-0 mt-0.5" />
               <span>{errorMessage}</span>
             </div>
           )}
@@ -118,7 +119,7 @@ export default function FirstLoginForm() {
             </div>
 
             <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-3 text-[11px] text-blue-800 flex gap-2 items-start">
-              <Lock className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+              <HugeiconsIcon icon={LockIcon} className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
               <span>Your records are encrypted and verified. Casting a ballot is irreversible and securely anchored.</span>
             </div>
 

@@ -6,7 +6,7 @@
 'use client';
 
 import React from 'react';
-import ResultsPage from '../../../features/results/components/ResultsPage';
+import ResultsPage from '@/features/results/components/ResultsPage';
 
 export default function ResultsRoute() {
   return <ResultsPage />;

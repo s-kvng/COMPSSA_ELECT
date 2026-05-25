@@ -8,10 +8,11 @@
 import React, { useState } from 'react';
 import { useAuthContext } from '@/features/auth/mockAuth';
 import { useNavigation } from '@/features/auth/navigation';
-import { Mail, ArrowRight, ShieldAlert, Award } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Mail01Icon, ArrowRight01Icon, Alert01Icon, Award01Icon } from '@hugeicons/core-free-icons';
 
 export default function LoginForm() {
-  const { login, setMockRole } = useAuthContext();
+  const { login } = useAuthContext();
   const { navigateTo } = useNavigation();
   const [email, setEmail] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -34,8 +35,8 @@ export default function LoginForm() {
       } else {
         navigateTo('/dashboard');
       }
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Invalid email credentials.');
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : 'Invalid email credentials.');
     } finally {
       setIsSubmitting(false);
     }
@@ -69,8 +70,8 @@ export default function LoginForm() {
         } else {
           navigateTo('/dashboard');
         }
-      } catch (err: any) {
-        setErrorMessage(err.message);
+      } catch (err: unknown) {
+        setErrorMessage(err instanceof Error ? err.message : 'Login failed.');
       } finally {
         setIsSubmitting(false);
       }
@@ -82,7 +83,7 @@ export default function LoginForm() {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center mb-4">
           <div className="bg-blue-600 text-white p-2.5 rounded-xl shadow-md shadow-blue-500/10">
-            <Award className="h-6 w-6" />
+            <HugeiconsIcon icon={Award01Icon} className="h-6 w-6" />
           </div>
         </div>
         <h2 className="text-center font-display font-extrabold text-2xl text-slate-900">
@@ -97,7 +98,7 @@ export default function LoginForm() {
         <div className="bg-white py-8 px-4 border border-slate-200 rounded-xl shadow-xs sm:px-10">
           {errorMessage && (
             <div className="mb-4 bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg text-xs flex gap-2 items-start">
-              <ShieldAlert className="h-4.5 w-4.5 text-red-600 shrink-0 mt-0.5" />
+              <HugeiconsIcon icon={Alert01Icon} className="h-4.5 w-4.5 text-red-600 shrink-0 mt-0.5" />
               <span>{errorMessage}</span>
             </div>
           )}
@@ -109,7 +110,7 @@ export default function LoginForm() {
               </label>
               <div className="mt-1.5 relative rounded-md shadow-2xs">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-4 w-4 text-slate-400" />
+                  <HugeiconsIcon icon={Mail01Icon} className="h-4 w-4 text-slate-400" />
                 </div>
                 <input
                   type="email"
@@ -151,7 +152,7 @@ export default function LoginForm() {
                 ) : (
                   <>
                     <span>Enter Voting System</span>
-                    <ArrowRight className="h-4 w-4" />
+                    <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" />
                   </>
                 )}
               </button>
