@@ -23,7 +23,6 @@ export const addCandidate = mutation({
       categoryId: args.categoryId,
       userId: args.userId,
       bio: args.bio,
-      count: 0,
     });
 
     await ctx.db.insert("ec_action_log", {

@@ -57,12 +57,18 @@ export const electionResults = query({
 
         const candidates = await Promise.all(
           candidateDocs.map(async (c) => {
-            const candUser = await ctx.db.get(c.userId);
+            const [candUser, votes] = await Promise.all([
+              ctx.db.get(c.userId),
+              ctx.db
+                .query("voted_log")
+                .withIndex("by_candidate", (q) => q.eq("candidateId", c._id))
+                .collect(),
+            ]);
             return {
               _id: c._id,
               userId: c.userId,
               userName: candUser?.name ?? "Unknown",
-              count: c.count,
+              count: votes.length,
             };
           }),
         );
@@ -99,6 +105,11 @@ export const myVoteCount = query({
       )
       .unique();
 
-    return candidateEntry?.count ?? null;
+    if (!candidateEntry) return null;
+    const votes = await ctx.db
+      .query("voted_log")
+      .withIndex("by_candidate", (q) => q.eq("candidateId", candidateEntry._id))
+      .collect();
+    return votes.length;
   },
 });

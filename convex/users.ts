@@ -48,17 +48,19 @@ export const getStudents = query({
   handler: async (ctx) => {
     const user = await getUser(ctx);
     if (user.role !== "ec") throw new ConvexError("Forbidden");
-    const allUsers = await ctx.db.query("users").take(500);
-    return allUsers
-      .filter((u) => u.role === "student")
-      .map((u) => ({
-        _id: u._id,
-        name: u.name,
-        email: u.email,
-        studentId: u.studentId,
-        role: u.role,
-        isFirstLogin: u.isFirstLogin,
-      }));
+    const [students, candidates, ecs] = await Promise.all([
+      ctx.db.query("users").withIndex("by_role", (q) => q.eq("role", "student")).collect(),
+      ctx.db.query("users").withIndex("by_role", (q) => q.eq("role", "candidate")).collect(),
+      ctx.db.query("users").withIndex("by_role", (q) => q.eq("role", "ec")).collect(),
+    ]);
+    return [...students, ...candidates, ...ecs].map((u) => ({
+      _id: u._id,
+      name: u.name,
+      email: u.email,
+      studentId: u.studentId,
+      role: u.role,
+      isFirstLogin: u.isFirstLogin,
+    }));
   },
 });
 

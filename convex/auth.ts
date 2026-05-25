@@ -8,11 +8,14 @@ export const { auth, signIn, signOut, store } = convexAuth({
     async createOrUpdateUser(ctx, args) {
       if (args.existingUserId) return args.existingUserId;
 
+      const email = args.profile.email;
+      if (!email) throw new ConvexError("Authentication provider did not supply an email address.");
+
       // Only allow pre-approved emails (bulk-imported by EC)
       // Cast needed: createOrUpdateUser ctx is typed against auth-internal tables only
       const preCreated = await (ctx.db as any)
         .query("users")
-        .withIndex("by_email", (q: any) => q.eq("email", args.profile.email ?? ""))
+        .withIndex("by_email", (q: any) => q.eq("email", email))
         .unique();
 
       if (!preCreated) throw new ConvexError("Not registered. Contact your EC.");

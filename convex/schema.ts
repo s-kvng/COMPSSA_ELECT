@@ -28,7 +28,8 @@ export default defineSchema({
     isFirstLogin: v.boolean(),
   })
     .index("by_email", ["email"])
-    .index("by_student_id", ["studentId"]),
+    .index("by_student_id", ["studentId"])
+    .index("by_role", ["role"]),
 
   elections: defineTable({
     title: v.string(),
@@ -52,7 +53,6 @@ export default defineSchema({
     userId: v.id("users"),
     bio: v.optional(v.string()),
     photoStorageId: v.optional(v.id("_storage")),
-    count: v.number(),
   })
     .index("by_election", ["electionId"])
     .index("by_category", ["categoryId"])
@@ -62,10 +62,13 @@ export default defineSchema({
     electionId: v.id("elections"),
     studentId: v.id("users"),
     categoryId: v.id("categories"),
+    candidateId: v.id("candidates"),
     timestamp: v.number(),
   })
     .index("by_voter_category", ["studentId", "categoryId"])
-    .index("by_election", ["electionId"]),
+    .index("by_voter_election", ["studentId", "electionId"])
+    .index("by_election", ["electionId"])
+    .index("by_candidate", ["candidateId"]),
 
   ec_action_log: defineTable({
     electionId: v.id("elections"),

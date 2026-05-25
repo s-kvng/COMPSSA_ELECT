@@ -39,6 +39,12 @@ export const removeCategory = mutation({
     if (!election) throw new ConvexError("Election not found");
     if (election.status !== "draft") throw new ConvexError("Can only modify elections in draft status");
 
+    const candidates = await ctx.db
+      .query("candidates")
+      .withIndex("by_category", (q) => q.eq("categoryId", args.categoryId))
+      .collect();
+    await Promise.all(candidates.map((c) => ctx.db.delete(c._id)));
+
     await ctx.db.delete(args.categoryId);
     return null;
   },

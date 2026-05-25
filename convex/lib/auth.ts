@@ -9,3 +9,12 @@ export async function getUser(ctx: QueryCtx | MutationCtx) {
   if (!user) throw new ConvexError("User record not found");
   return user;
 }
+
+/** Throws unless the caller is a student or candidate (i.e. a voter). */
+export async function assertStudentVoter(ctx: QueryCtx | MutationCtx) {
+  const user = await getUser(ctx);
+  if (user.role !== "student" && user.role !== "candidate") {
+    throw new ConvexError("Only students and candidates may vote");
+  }
+  return user;
+}
