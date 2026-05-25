@@ -17,7 +17,7 @@ interface RouteGuardProps {
 
 export default function RouteGuard({ children }: RouteGuardProps) {
   const { currentUser, isLoading } = useAuthContext();
-  const { path, navigateTo, params } = useNavigation();
+  const { path, navigateTo } = useNavigation();
 
   useEffect(() => {
     if (isLoading) return;
@@ -45,7 +45,7 @@ export default function RouteGuard({ children }: RouteGuardProps) {
         navigateTo('/dashboard');
       }
     }
-  }, [currentUser, path, isLoading]);
+  }, [currentUser, path, isLoading, navigateTo]);
 
   if (isLoading) {
     return (

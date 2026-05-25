@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useIsMounted } from '@/hooks/useIsMounted';
 import { createPortal } from 'react-dom';
 import { useAuthContext } from '@/features/auth/mockAuth';
 import { useNavigation } from '@/features/auth/navigation';
@@ -44,9 +45,7 @@ export default function VoteCategoryPage() {
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => { setIsMounted(true); }, []);
+  const isMounted = useIsMounted();
 
   if (!currentUser) return null;
 
@@ -131,7 +130,7 @@ export default function VoteCategoryPage() {
       {/* Status banner */}
       {hasVoted ? (
         <div className="bg-[#d1fae5] border border-[#6ee7b7] p-4 rounded-xl flex items-center gap-3">
-          <CheckmarkCircle01Icon className="h-5 w-5 text-[#065f46] shrink-0" />
+          <HugeiconsIcon icon={CheckmarkCircle01Icon} className="h-5 w-5 text-[#065f46] shrink-0" />
           <div>
             <p className="text-sm font-semibold text-[#065f46]">Ballot Sealed</p>
             <p className="text-xs text-[#047857] mt-0.5">

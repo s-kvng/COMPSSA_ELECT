@@ -8,8 +8,9 @@
 import React, { useState } from 'react';
 import { useAuthContext } from '@/features/auth/mockAuth';
 import { useNavigation } from '@/features/auth/navigation';
+import { useIsMounted } from '@/hooks/useIsMounted';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { SlidersHorizontalIcon, RefreshIcon, SparklesIcon, ShuffleIcon, Alert01Icon, Cancel01Icon } from '@hugeicons/core-free-icons';
+import { SlidersHorizontalIcon, RefreshIcon, SparklesIcon, ShuffleIcon, Cancel01Icon } from '@hugeicons/core-free-icons';
 
 export default function DemoPanel() {
   const {
@@ -26,11 +27,7 @@ export default function DemoPanel() {
 
   const [isOpen, setIsOpen] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
-  const [isMounted, setIsMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  const isMounted = useIsMounted();
 
   // Fast voting simulation helper
   const handleTriggerSimulatedVotes = () => {
@@ -162,7 +159,7 @@ export default function DemoPanel() {
             </div>
             
             <p className="text-[9px] text-slate-500 leading-normal text-center bg-slate-950/40 p-1.5 border border-slate-850 rounded">
-              Use "Simulate Voter Actions" to trigger mock students submitting votes, then log in as <strong>EC</strong> or <strong>HOD</strong> to watch tallies jump live!
+              Use &ldquo;Simulate Voter Actions&rdquo; to trigger mock students submitting votes, then log in as <strong>EC</strong> or <strong>HOD</strong> to watch tallies jump live!
             </p>
           </div>
         </div>

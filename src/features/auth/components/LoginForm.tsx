@@ -12,7 +12,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { Mail01Icon, ArrowRight01Icon, Alert01Icon, Award01Icon } from '@hugeicons/core-free-icons';
 
 export default function LoginForm() {
-  const { login, setMockRole } = useAuthContext();
+  const { login } = useAuthContext();
   const { navigateTo } = useNavigation();
   const [email, setEmail] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -35,8 +35,8 @@ export default function LoginForm() {
       } else {
         navigateTo('/dashboard');
       }
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Invalid email credentials.');
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : 'Invalid email credentials.');
     } finally {
       setIsSubmitting(false);
     }
@@ -70,8 +70,8 @@ export default function LoginForm() {
         } else {
           navigateTo('/dashboard');
         }
-      } catch (err: any) {
-        setErrorMessage(err.message);
+      } catch (err: unknown) {
+        setErrorMessage(err instanceof Error ? err.message : 'Login failed.');
       } finally {
         setIsSubmitting(false);
       }

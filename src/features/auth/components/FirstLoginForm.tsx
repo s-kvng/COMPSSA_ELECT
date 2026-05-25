@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 import { useAuthContext } from '@/features/auth/mockAuth';
 import { useNavigation } from '@/features/auth/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Key01Icon, Alert01Icon, Award01Icon, LockIcon } from '@hugeicons/core-free-icons';
+import { Key01Icon, Alert01Icon, LockIcon } from '@hugeicons/core-free-icons';
 
 export default function FirstLoginForm() {
   const { completeFirstLogin, currentUser } = useAuthContext();

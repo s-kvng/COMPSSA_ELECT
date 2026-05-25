@@ -9,7 +9,7 @@ import React from 'react';
 import { useAuthContext } from '@/features/auth/mockAuth';
 import { useNavigation } from '@/features/auth/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Award01Icon, TrendingUpDownIcon, CheckmarkSquare01Icon, Shield01Icon } from '@hugeicons/core-free-icons';
+import { TrendingUpDownIcon, CheckmarkSquare01Icon, Shield01Icon } from '@hugeicons/core-free-icons';
 
 export default function CandidateTallyPage() {
   const { currentUser, elections } = useAuthContext();

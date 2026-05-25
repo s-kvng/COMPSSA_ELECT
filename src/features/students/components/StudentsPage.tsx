@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useIsMounted } from '@/hooks/useIsMounted';
 import { createPortal } from 'react-dom';
 import { useAuthContext } from '@/features/auth/mockAuth';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -25,9 +26,7 @@ export default function StudentsPage() {
     errors: string[];
     credentialsCsv?: string;
   } | null>(null);
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => { setIsMounted(true); }, []);
+  const isMounted = useIsMounted();
 
   const studentList = users.filter((u) => u.role === 'Student' || u.role === 'Candidate');
 

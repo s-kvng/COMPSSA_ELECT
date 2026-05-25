@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useIsMounted } from '@/hooks/useIsMounted';
 import { createPortal } from 'react-dom';
 import { useAuthContext } from '@/features/auth/mockAuth';
 import { useNavigation } from '@/features/auth/navigation';
@@ -25,9 +26,7 @@ export default function LiveDashboardPage() {
 
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [showPublishConfirm, setShowPublishConfirm] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => { setIsMounted(true); }, []);
+  const isMounted = useIsMounted();
 
   const electId = params.id;
   const election = elections.find((e) => e.id === electId);

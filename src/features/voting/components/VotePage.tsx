@@ -9,7 +9,7 @@ import React from 'react';
 import { useAuthContext } from '@/features/auth/mockAuth';
 import { useNavigation } from '@/features/auth/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { CheckmarkCircle01Icon, ArrowRight01Icon, LockIcon, HelpCircleIcon } from '@hugeicons/core-free-icons';
+import { CheckmarkCircle01Icon, ArrowRight01Icon, LockIcon } from '@hugeicons/core-free-icons';
 
 export default function VotePage() {
   const { currentUser, elections, voteRecords } = useAuthContext();

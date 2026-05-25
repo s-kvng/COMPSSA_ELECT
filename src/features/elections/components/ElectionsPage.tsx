@@ -5,7 +5,8 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useIsMounted } from '@/hooks/useIsMounted';
 import { createPortal } from 'react-dom';
 import { useAuthContext } from '@/features/auth/mockAuth';
 import { useNavigation } from '@/features/auth/navigation';
@@ -22,9 +23,7 @@ export default function ElectionsPage() {
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState('2026-05-23T08:00');
   const [endDate, setEndDate] = useState('2026-05-25T18:00');
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => { setIsMounted(true); }, []);
+  const isMounted = useIsMounted();
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();

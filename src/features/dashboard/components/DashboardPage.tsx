@@ -6,6 +6,7 @@
 'use client';
 
 import React from 'react';
+import { useIsMounted } from '@/hooks/useIsMounted';
 import { useAuthContext } from '@/features/auth/mockAuth';
 import { useNavigation } from '@/features/auth/navigation';
 import StatusBadge from '@/components/StatusBadge';
@@ -16,21 +17,18 @@ import {
   Clock01Icon,
   ArrowRight01Icon,
   TrendingUpDownIcon,
-  Award01Icon,
   UserGroupIcon,
   Activity01Icon,
   Time01Icon,
-  FileVolumeIcon,
 } from '@hugeicons/core-free-icons';
 
 export default function DashboardPage() {
   const { currentUser, elections, voteRecords, actionLog, users } = useAuthContext();
   const { navigateTo } = useNavigation();
   const [currentTime, setCurrentTime] = React.useState<string | null>(null);
-  const [isMounted, setIsMounted] = React.useState(false);
+  const isMounted = useIsMounted();
 
   React.useEffect(() => {
-    setIsMounted(true);
     const updateTime = () => {
       const now = new Date();
       const utcString = now.toISOString().replace('T', ' ').slice(0, 16);
@@ -171,14 +169,6 @@ export default function DashboardPage() {
                         </p>
                       </div>
 
-                      {activeElection.status === 'Published' && (
-                        <button
-                          onClick={() => navigateTo(`/results/${activeElection.id}`)}
-                          className="w-full mt-4 flex items-center justify-center gap-1 text-xs font-semibold text-purple-700 bg-purple-50 border border-purple-200 py-2 rounded-lg hover:bg-purple-100/50"
-                        >
-                          View Official Results →
-                        </button>
-                      )}
                     </div>
                   </div>
                 ) : activeElection.status === 'Published' ? (

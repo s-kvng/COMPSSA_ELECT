@@ -18,7 +18,6 @@ import {
   Tv01Icon,
   Logout01Icon,
   SlidersHorizontalIcon,
-  SparklesIcon,
 } from '@hugeicons/core-free-icons';
 
 export default function Sidebar() {
