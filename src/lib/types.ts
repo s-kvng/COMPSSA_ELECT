@@ -14,6 +14,7 @@ export interface User {
   email: string;
   role: Role;
   firstLoginPending: boolean;
+  avatarUrl?: string;
   candidateCategory?: string; // If candidate, which category are they contesting
 }
 
