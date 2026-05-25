@@ -8,7 +8,8 @@
 import React, { useEffect } from 'react';
 import { useAuthContext } from '@/features/auth/mockAuth';
 import { useNavigation } from '@/features/auth/navigation';
-import { Lock, Shuffle } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { LockIcon, ShuffleIcon } from '@hugeicons/core-free-icons';
 
 interface RouteGuardProps {
   children: React.ReactNode;
@@ -90,7 +91,7 @@ export default function RouteGuard({ children }: RouteGuardProps) {
       return (
         <div id="guard-restriction-screen" className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
           <div className="bg-red-50 p-4 rounded-full border border-red-200 text-red-600 mb-4 animate-bounce">
-            <Lock className="h-8 w-8" />
+            <HugeiconsIcon icon={LockIcon} className="h-8 w-8" />
           </div>
           <h2 className="font-display font-bold text-lg text-slate-900 mb-2">Restricted Action Room</h2>
           <p className="font-sans text-xs text-slate-500 max-w-md mb-6 leading-relaxed">
@@ -110,7 +111,7 @@ export default function RouteGuard({ children }: RouteGuardProps) {
       return (
         <div id="guard-restriction-screen-hod" className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
           <div className="bg-red-50 p-4 rounded-full border border-red-200 text-red-600 mb-4">
-            <Lock className="h-8 w-8" />
+            <HugeiconsIcon icon={LockIcon} className="h-8 w-8" />
           </div>
           <h2 className="font-display font-bold text-lg text-slate-900 mb-2">HOD Eyes Only</h2>
           <p className="font-sans text-xs text-slate-500 max-w-md mb-6">
@@ -130,7 +131,7 @@ export default function RouteGuard({ children }: RouteGuardProps) {
       return (
         <div id="guard-restriction-screen-vote" className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
           <div className="bg-blue-50 p-4 rounded-full border border-blue-200 text-blue-600 mb-4">
-            <Shuffle className="h-8 w-8 animate-spin" />
+            <HugeiconsIcon icon={ShuffleIcon} className="h-8 w-8 animate-spin" />
           </div>
           <h2 className="font-display font-bold text-lg text-slate-900 mb-2">Voter Registry Access Block</h2>
           <p className="font-sans text-xs text-slate-500 max-w-md mb-6">

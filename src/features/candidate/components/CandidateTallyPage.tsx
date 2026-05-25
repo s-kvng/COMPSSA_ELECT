@@ -8,7 +8,8 @@
 import React from 'react';
 import { useAuthContext } from '@/features/auth/mockAuth';
 import { useNavigation } from '@/features/auth/navigation';
-import { Award, TrendingUp, CheckSquare, ShieldCheck } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Award01Icon, TrendingUpDownIcon, CheckmarkSquare01Icon, Shield01Icon } from '@hugeicons/core-free-icons';
 
 export default function CandidateTallyPage() {
   const { currentUser, elections } = useAuthContext();
@@ -49,7 +50,7 @@ export default function CandidateTallyPage() {
 
         <div className="relative space-y-5">
           <div className="inline-flex bg-blue-500/25 p-3 rounded-full border border-blue-400/20 text-blue-400">
-            <TrendingUp className="h-6 w-6 stroke-[1.5]" />
+            <HugeiconsIcon icon={TrendingUpDownIcon} className="h-6 w-6" strokeWidth={1.5} />
           </div>
 
           <div className="space-y-1">
@@ -79,7 +80,7 @@ export default function CandidateTallyPage() {
           </p>
 
           <div className="border-t border-slate-800 pt-4 flex items-center justify-center gap-2 text-[10px] font-mono text-slate-400">
-            <ShieldCheck className="h-3.5 w-3.5 text-blue-500" />
+            <HugeiconsIcon icon={Shield01Icon} className="h-3.5 w-3.5 text-blue-500" />
             <span>Encrypted Privacy Partition Active • Tally audit confirmed</span>
           </div>
         </div>
@@ -90,7 +91,7 @@ export default function CandidateTallyPage() {
         <div className="border border-slate-200/60 p-5 rounded-xl bg-white flex flex-col sm:flex-row justify-between items-center gap-4 shadow-3xs">
           <div className="space-y-0.5 text-center sm:text-left">
             <h4 className="font-display font-semibold text-xs text-slate-900 flex items-center gap-2 justify-center sm:justify-start">
-              <CheckSquare className="h-4.5 w-4.5 text-blue-600" />
+              <HugeiconsIcon icon={CheckmarkSquare01Icon} className="h-4.5 w-4.5 text-blue-600" />
               <span>Have you cast your own ballot?</span>
             </h4>
             <p className="text-xs text-slate-500">You are eligible to vote for other positions in COMPSSACategories.</p>

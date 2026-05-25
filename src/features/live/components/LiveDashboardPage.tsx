@@ -9,17 +9,18 @@ import React from 'react';
 import { useAuthContext } from '@/features/auth/mockAuth';
 import { useNavigation } from '@/features/auth/navigation';
 import StatusBadge from '@/components/StatusBadge';
+import { HugeiconsIcon } from '@hugeicons/react';
 import {
-  ArrowLeft,
-  Users,
-  CheckCircle,
-  FileSpreadsheet,
-  Megaphone,
-  History,
-  Tv,
-  Sparkles,
-  Lock
-} from 'lucide-react';
+  ArrowLeft01Icon,
+  UserGroupIcon,
+  CheckmarkCircle01Icon,
+  FileSpreadsheetIcon,
+  Megaphone01Icon,
+  Time01Icon,
+  Tv01Icon,
+  SparklesIcon,
+  LockIcon,
+} from '@hugeicons/core-free-icons';
 
 export default function LiveDashboardPage() {
   const {
@@ -121,7 +122,7 @@ export default function LiveDashboardPage() {
             onClick={() => navigateTo('/admin/elections')}
             className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-800 transition-all cursor-pointer"
           >
-            <ArrowLeft className="h-4.5 w-4.5" />
+            <HugeiconsIcon icon={ArrowLeft01Icon} className="h-4.5 w-4.5" />
           </button>
           <div className="space-y-1">
             <span className="text-[10px] font-mono bg-blue-50 text-blue-700 font-bold px-2.5 py-0.5 rounded-full border border-blue-150">MISSION CONTROL</span>
@@ -136,7 +137,7 @@ export default function LiveDashboardPage() {
               onClick={handleCloseEarly}
               className="px-4 py-2 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer transition-all"
             >
-              <Lock className="h-4 w-4" />
+              <HugeiconsIcon icon={LockIcon} className="h-4 w-4" />
               <span>Close Election Early</span>
             </button>
           )}
@@ -146,7 +147,7 @@ export default function LiveDashboardPage() {
               onClick={handlePublishResults}
               className="px-5 py-2.5 text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 rounded-lg shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
             >
-              <Megaphone className="h-4 w-4 animate-bounce" />
+              <HugeiconsIcon icon={Megaphone01Icon} className="h-4 w-4 animate-bounce" />
               <span>Publish Public Results Board</span>
             </button>
           )}
@@ -156,7 +157,7 @@ export default function LiveDashboardPage() {
               onClick={handleExportCSV}
               className="px-4 py-2 text-xs font-semibold text-emerald-850 bg-emerald-50 hover:bg-emerald-100 border border-emerald-250 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer"
             >
-              <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+              <HugeiconsIcon icon={FileSpreadsheetIcon} className="h-4 w-4 text-emerald-600" />
               <span>Export Audit Ledger (CSV)</span>
             </button>
           )}
@@ -176,7 +177,7 @@ export default function LiveDashboardPage() {
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <div className="bg-white border rounded-xl p-5 shadow-3xs space-y-1 text-left">
           <div className="flex items-center gap-2 text-[10px] uppercase font-mono font-bold text-slate-400">
-            <Users className="h-4 w-4 text-slate-400" />
+            <HugeiconsIcon icon={UserGroupIcon} className="h-4 w-4 text-slate-400" />
             <span>Eligible Board</span>
           </div>
           <p className="text-2xl font-mono font-extrabold text-slate-900">{registeredStudentsCount}</p>
@@ -185,7 +186,7 @@ export default function LiveDashboardPage() {
 
         <div className="bg-white border rounded-xl p-5 shadow-3xs space-y-1 text-left">
           <div className="flex items-center gap-2 text-[10px] uppercase font-mono font-bold text-slate-400">
-            <CheckCircle className="h-4 w-4 text-emerald-500" />
+            <HugeiconsIcon icon={CheckmarkCircle01Icon} className="h-4 w-4 text-emerald-500" />
             <span>Ballots Sealed</span>
           </div>
           <p className="text-2xl font-mono font-extrabold text-slate-900">{votedTurnoutCount}</p>
@@ -195,7 +196,7 @@ export default function LiveDashboardPage() {
         <div className="bg-white border rounded-xl p-5 col-span-2 md:col-span-1 shadow-3xs space-y-2 text-left bg-linear-to-b from-white to-slate-50/20">
           <div className="flex items-center justify-between text-[10px] uppercase font-mono font-bold text-slate-400">
             <span className="flex items-center gap-2">
-              <Tv className="h-4 w-4 text-blue-500" />
+              <HugeiconsIcon icon={Tv01Icon} className="h-4 w-4 text-blue-500" />
               <span>Live Response Rate</span>
             </span>
             <span>{turnoutPercent}%</span>
@@ -238,7 +239,7 @@ export default function LiveDashboardPage() {
                           <span className="font-semibold text-slate-900">{cand.name}</span>
                           {isLeader && (
                             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-extrabold text-amber-700 bg-amber-50 border border-amber-250 rounded font-mono uppercase leading-none">
-                              <Sparkles className="h-2.5 w-2.5" />
+                              <HugeiconsIcon icon={SparklesIcon} className="h-2.5 w-2.5" />
                               Leader
                             </span>
                           )}
@@ -267,7 +268,7 @@ export default function LiveDashboardPage() {
       {/* Operations Event Logger */}
       <div className="border rounded-2xl p-5 bg-white space-y-4 select-text">
         <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
-          <History className="h-4.5 w-4.5 text-slate-500" />
+          <HugeiconsIcon icon={Time01Icon} className="h-4.5 w-4.5 text-slate-500" />
           <h4 className="font-display font-bold text-xs text-slate-850">EC Administrative Action Logs</h4>
         </div>
 

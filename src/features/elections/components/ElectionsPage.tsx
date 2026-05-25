@@ -9,7 +9,8 @@ import React, { useState } from 'react';
 import { useAuthContext } from '@/features/auth/mockAuth';
 import { useNavigation } from '@/features/auth/navigation';
 import StatusBadge from '@/components/StatusBadge';
-import { Sliders, Plus, Calendar, Settings, Play, Eye } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { SlidersHorizontalIcon, PlusSignIcon, Calendar01Icon, Settings01Icon, PlayIcon, EyeIcon } from '@hugeicons/core-free-icons';
 
 export default function ElectionsPage() {
   const { elections, createElection } = useAuthContext();
@@ -51,7 +52,7 @@ export default function ElectionsPage() {
           onClick={() => setShowCreateModal(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
         >
-          <Plus className="h-4 w-4 stroke-[2.5]" />
+          <HugeiconsIcon icon={PlusSignIcon} className="h-4 w-4" strokeWidth={2.5} />
           <span>New Election</span>
         </button>
       </div>
@@ -80,11 +81,11 @@ export default function ElectionsPage() {
 
                 <div className="flex flex-wrap items-center gap-4 text-[11px] font-mono text-slate-500 font-semibold mt-1">
                   <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4 text-slate-400" />
+                    <HugeiconsIcon icon={Calendar01Icon} className="h-4 w-4 text-slate-400" />
                     <span>Starts: {elect.startDate.replace('T', ' ').slice(0, 16)}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4 text-slate-400" />
+                    <HugeiconsIcon icon={Calendar01Icon} className="h-4 w-4 text-slate-400" />
                     <span>Ends: {elect.endDate.replace('T', ' ').slice(0, 16)}</span>
                   </div>
                 </div>
@@ -96,7 +97,7 @@ export default function ElectionsPage() {
                   onClick={() => navigateTo(`/admin/elections/${elect.id}`)}
                   className="px-4 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-lg flex items-center gap-1.5 transition-all"
                 >
-                  <Settings className="h-4 w-4 text-slate-400" />
+                  <HugeiconsIcon icon={Settings01Icon} className="h-4 w-4 text-slate-400" />
                   <span>Setup Panel</span>
                 </button>
 
@@ -105,7 +106,7 @@ export default function ElectionsPage() {
                     onClick={() => navigateTo(`/admin/elections/${elect.id}/live`)}
                     className="px-4 py-2 text-xs font-semibold text-blue-750 bg-blue-50 hover:bg-blue-100 border border-blue-200/50 rounded-lg flex items-center gap-1.5 transition-all"
                   >
-                    <Eye className="h-4 w-4" />
+                    <HugeiconsIcon icon={EyeIcon} className="h-4 w-4" />
                     <span>Live Tracker</span>
                   </button>
                 )}

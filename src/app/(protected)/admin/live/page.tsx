@@ -8,7 +8,8 @@
 import React from 'react';
 import { useAuthContext } from '../../../../features/auth/mockAuth';
 import StatusBadge from '../../../../components/StatusBadge';
-import { Award, Clock, Activity, ShieldCheck, HeartCrack } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Clock01Icon, Activity01Icon, Shield01Icon, HeartbreakIcon } from '@hugeicons/core-free-icons';
 
 export default function HodLiveCenterRoute() {
   const { elections, users, voteRecords } = useAuthContext();
@@ -18,7 +19,7 @@ export default function HodLiveCenterRoute() {
   if (!activeElection) {
     return (
       <div id="hod-no-elect-screen" className="py-12 text-center max-w-sm mx-auto space-y-4 font-sans">
-        <HeartCrack className="h-10 w-10 text-slate-400 mx-auto" />
+        <HugeiconsIcon icon={HeartbreakIcon} className="h-10 w-10 text-slate-400 mx-auto" />
         <h3 className="font-display font-semibold text-slate-900 text-sm">No Active Elections Cataloged</h3>
         <p className="text-xs text-slate-500">There are no live departmental elections currently active to track.</p>
       </div>
@@ -69,7 +70,7 @@ export default function HodLiveCenterRoute() {
         <div className="flex justify-between items-center border-b pb-2">
           <h3 className="font-display font-bold text-sm text-slate-800">Department Position Tallies</h3>
           <span className="text-[9px] font-mono text-slate-400 flex items-center gap-1">
-            <Clock className="h-3 w-3 animate-spin" />
+            <HugeiconsIcon icon={Clock01Icon} className="h-3 w-3 animate-spin" />
             Live counts stream
           </span>
         </div>
@@ -112,7 +113,7 @@ export default function HodLiveCenterRoute() {
       </div>
 
       <div className="p-4 bg-slate-50 border border-slate-150 rounded-xl flex gap-2.5 items-center text-xs text-slate-600">
-        <ShieldCheck className="h-5 w-5 text-purple-600 shrink-0" />
+        <HugeiconsIcon icon={Shield01Icon} className="h-5 w-5 text-purple-600 shrink-0" />
         <span>Certified read-only audit channel. All outputs are encrypted and verified safe.</span>
       </div>
     </div>

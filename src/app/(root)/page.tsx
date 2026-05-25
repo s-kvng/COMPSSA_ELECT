@@ -8,7 +8,8 @@
 import React from 'react';
 import { useNavigation } from '../../features/auth/navigation';
 import { useAuthContext } from '../../features/auth/mockAuth';
-import { Award, ArrowRight, CheckSquare, ShieldCheck, Heart, Users } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Award01Icon, ArrowRight01Icon, CheckmarkSquare01Icon, Shield01Icon, FavouriteIcon, UserGroupIcon } from '@hugeicons/core-free-icons';
 
 export default function LandingPage() {
   const { navigateTo } = useNavigation();
@@ -20,7 +21,7 @@ export default function LandingPage() {
       <header className="max-w-7xl mx-auto w-full px-6 py-6 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="bg-blue-600 text-white p-2 rounded-xl shadow-xs">
-            <Award className="h-5 w-5" />
+            <HugeiconsIcon icon={Award01Icon} className="h-5 w-5" />
           </div>
           <div>
             <h1 className="font-display font-black text-sm text-slate-900 tracking-wide uppercase">
@@ -62,7 +63,7 @@ export default function LandingPage() {
             className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-md hover:shadow-lg hover:shadow-blue-500/10 cursor-pointer transition-all"
           >
             <span>Enter Voting Booth</span>
-            <ArrowRight className="h-4 w-4" />
+            <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" />
           </button>
           <button
             onClick={() => navigateTo('/results/elect-2026')}
@@ -75,17 +76,17 @@ export default function LandingPage() {
         {/* Triple selling values cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-8 w-full">
           <div className="border border-slate-200/70 p-5 bg-white/70 backdrop-blur-xs rounded-xl shadow-3xs text-left space-y-2">
-            <CheckSquare className="h-5 w-5 text-emerald-500 stroke-2" />
+            <HugeiconsIcon icon={CheckmarkSquare01Icon} className="h-5 w-5 text-emerald-500" strokeWidth={2} />
             <h4 className="font-display font-bold text-xs text-slate-900 mt-2">Irrevocable Balloting</h4>
             <p className="text-[11px] text-slate-400 leading-normal">Each student cast is signed, securely logged, and completely unalterable after confirmation.</p>
           </div>
           <div className="border border-slate-200/70 p-5 bg-white/70 backdrop-blur-xs rounded-xl shadow-3xs text-left space-y-2">
-            <ShieldCheck className="h-5 w-5 text-blue-500 stroke-2" />
+            <HugeiconsIcon icon={Shield01Icon} className="h-5 w-5 text-blue-500" strokeWidth={2} />
             <h4 className="font-display font-bold text-xs text-slate-900 mt-2">Anonymity Safeguard</h4>
             <p className="text-[11px] text-slate-400 leading-normal">Independent voter records are pseudoymized. Nobody can associate your name to your selected candidate choices.</p>
           </div>
           <div className="border border-slate-200/70 p-5 bg-white/70 backdrop-blur-xs rounded-xl shadow-3xs text-left space-y-2">
-            <Users className="h-5 w-5 text-purple-500 stroke-2" />
+            <HugeiconsIcon icon={UserGroupIcon} className="h-5 w-5 text-purple-500" strokeWidth={2} />
             <h4 className="font-display font-bold text-xs text-slate-900 mt-2">Verified Roster Match</h4>
             <p className="text-[11px] text-slate-400 leading-normal">The Electoral Commission manages verified student ID lists. Only enroled members of COMPSSA can enter.</p>
           </div>
@@ -97,7 +98,7 @@ export default function LandingPage() {
         <p>Department of Computer Science • Association of Ghana Computer Science Students</p>
         <p className="mt-1 flex items-center justify-center gap-1.5">
           <span>Engineered with pure respect for students voice</span>
-          <Heart className="h-3 w-3 text-red-500 fill-red-500" />
+          <HugeiconsIcon icon={FavouriteIcon} className="h-3 w-3 text-red-500" />
         </p>
       </footer>
     </div>

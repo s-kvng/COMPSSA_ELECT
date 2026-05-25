@@ -4,7 +4,8 @@
  */
 
 import React from 'react';
-import { Archive } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArchiveIcon } from '@hugeicons/core-free-icons';
 
 interface EmptyStateProps {
   title: string;
@@ -17,7 +18,7 @@ export default function EmptyState({
   title,
   description,
   actionButton,
-  icon = <Archive className="h-10 w-10 text-gray-400 stroke-[1.5]" />
+  icon = <HugeiconsIcon icon={ArchiveIcon} className="h-10 w-10 text-gray-400" strokeWidth={1.5} />
 }: EmptyStateProps) {
   return (
     <div id="empty-state-container" className="flex flex-col items-center justify-center text-center p-8 border border-dashed border-gray-200 rounded-xl bg-white/40 backdrop-blur-sm shadow-xs max-w-md mx-auto my-6 animate-fade-in">

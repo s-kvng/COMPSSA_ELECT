@@ -7,7 +7,8 @@
 
 import React, { useState } from 'react';
 import { useAuthContext } from '@/features/auth/mockAuth';
-import { Search, Plus, UploadCloud, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Search01Icon, PlusSignIcon, Upload01Icon, Alert01Icon, Shield01Icon } from '@hugeicons/core-free-icons';
 
 export default function StudentsPage() {
   const { users, importStudents } = useAuthContext();
@@ -105,7 +106,7 @@ export default function StudentsPage() {
           }}
           className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg flex items-center gap-1.5 cursor-pointer shadow-xs"
         >
-          <UploadCloud className="h-4.5 w-4.5" />
+          <HugeiconsIcon icon={Upload01Icon} className="h-4.5 w-4.5" />
           <span>Bulk Import CSV</span>
         </button>
       </div>
@@ -114,7 +115,7 @@ export default function StudentsPage() {
       <div className="flex flex-col sm:flex-row gap-3 select-all">
         <div className="relative flex-grow">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-slate-400" />
+            <HugeiconsIcon icon={Search01Icon} className="h-4 w-4 text-slate-400" />
           </div>
           <input
             type="text"
@@ -198,7 +199,7 @@ export default function StudentsPage() {
                 {importResult.successCount > 0 && (
                   <div className="bg-green-50 border border-green-200 p-4 rounded-xl flex flex-col gap-3">
                     <div className="flex gap-2.5 items-center text-green-800 text-xs">
-                      <ShieldCheck className="h-5 w-5 text-green-600" />
+                      <HugeiconsIcon icon={Shield01Icon} className="h-5 w-5 text-green-600" />
                       <span>
                         Successfully loaded <strong>{importResult.successCount}</strong> new students records.
                       </span>
@@ -219,7 +220,7 @@ export default function StudentsPage() {
                 {importResult.errors.length > 0 && (
                   <div className="bg-red-50 border border-red-200 p-4 rounded-xl space-y-2">
                     <div className="flex gap-2 items-center text-red-800 text-xs font-bold">
-                      <AlertTriangle className="h-4.5 w-4.5 text-red-600" />
+                      <HugeiconsIcon icon={Alert01Icon} className="h-4.5 w-4.5 text-red-600" />
                       <span>Validation Errors found ({importResult.errors.length})</span>
                     </div>
                     <div className="max-h-24 overflow-y-auto custom-scrollbar pr-2 text-[10px] space-y-1 font-mono text-red-700">

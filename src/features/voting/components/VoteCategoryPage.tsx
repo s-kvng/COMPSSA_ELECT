@@ -8,7 +8,8 @@
 import React, { useState } from 'react';
 import { useAuthContext } from '@/features/auth/mockAuth';
 import { useNavigation } from '@/features/auth/navigation';
-import { ArrowLeft, CheckCircle2, ShieldQuestion, Loader2 } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowLeft01Icon, CheckmarkCircle01Icon, ShieldQuestionMarkIcon, LoaderPinwheelIcon } from '@hugeicons/core-free-icons';
 
 export default function VoteCategoryPage() {
   const { currentUser, elections, voteRecords, registerVote } = useAuthContext();
@@ -80,7 +81,7 @@ export default function VoteCategoryPage() {
           onClick={() => navigateTo('/vote')}
           className="p-1.5 hover:bg-slate-100 rounded-lg group text-slate-500 hover:text-slate-800 transition-all cursor-pointer"
         >
-          <ArrowLeft className="h-4.5 w-4.5 group-hover:-translate-x-0.5 transition-transform" />
+          <HugeiconsIcon icon={ArrowLeft01Icon} className="h-4.5 w-4.5 group-hover:-translate-x-0.5 transition-transform" />
         </button>
         <span className="text-xs font-semibold text-slate-500">Back to Category Grid</span>
       </div>
@@ -94,7 +95,7 @@ export default function VoteCategoryPage() {
 
       {hasVoted ? (
         <div id="already-voted-notice" className="bg-emerald-50 border border-emerald-200 p-6 rounded-2xl flex items-center gap-4 text-emerald-800 shadow-3xs">
-          <CheckCircle2 className="h-8 w-8 text-emerald-600 shrink-0" />
+          <HugeiconsIcon icon={CheckmarkCircle01Icon} className="h-8 w-8 text-emerald-600 shrink-0" />
           <div className="space-y-0.5">
             <h4 className="font-display font-bold text-sm">Ballot Already Sealed</h4>
             <p className="text-xs text-emerald-600">
@@ -104,7 +105,7 @@ export default function VoteCategoryPage() {
         </div>
       ) : (
         <div className="bg-blue-50/40 border border-blue-100 p-4 rounded-xl text-xs text-blue-800 flex items-center gap-2.5">
-          <ShieldQuestion className="h-5 w-5 text-blue-500" />
+          <HugeiconsIcon icon={ShieldQuestionMarkIcon} className="h-5 w-5 text-blue-500" />
           <span>Select one candidate block from the list below and tap Confirm to cast your irrevocable ballot.</span>
         </div>
       )}
@@ -188,7 +189,7 @@ export default function VoteCategoryPage() {
           <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 space-y-5 shadow-xl">
             <div className="flex items-start gap-4 text-left">
               <div className="bg-blue-50 text-blue-600 p-3 rounded-xl border border-blue-100 shrink-0">
-                <ShieldQuestion className="h-6 w-6 stroke-[1.5]" />
+                <HugeiconsIcon icon={ShieldQuestionMarkIcon} className="h-6 w-6" strokeWidth={1.5} />
               </div>
               <div className="space-y-1">
                 <h3 className="font-display font-bold text-base text-slate-900">Irrevocable Ballot Confirmation</h3>
@@ -223,7 +224,7 @@ export default function VoteCategoryPage() {
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <HugeiconsIcon icon={LoaderPinwheelIcon} className="h-3.5 w-3.5 animate-spin" />
                     <span>Sealing Ballot...</span>
                   </>
                 ) : (

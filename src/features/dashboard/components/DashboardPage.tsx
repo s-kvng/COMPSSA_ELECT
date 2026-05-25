@@ -10,17 +10,18 @@ import { useAuthContext } from '@/features/auth/mockAuth';
 import { useNavigation } from '@/features/auth/navigation';
 import StatusBadge from '@/components/StatusBadge';
 import EmptyState from '@/components/EmptyState';
+import { HugeiconsIcon } from '@hugeicons/react';
 import {
-  CheckCircle,
-  Clock,
-  ArrowRight,
-  TrendingUp,
-  Award,
-  Users,
-  Activity,
-  History,
-  FileVolume
-} from 'lucide-react';
+  CheckmarkCircle01Icon,
+  Clock01Icon,
+  ArrowRight01Icon,
+  TrendingUpDownIcon,
+  Award01Icon,
+  UserGroupIcon,
+  Activity01Icon,
+  Time01Icon,
+  FileVolumeIcon,
+} from '@hugeicons/core-free-icons';
 
 export default function DashboardPage() {
   const { currentUser, elections, voteRecords, actionLog, users } = useAuthContext();
@@ -115,7 +116,7 @@ export default function DashboardPage() {
                     <div className="col-span-1 md:col-span-2 border border-slate-100 bg-linear-to-b from-white to-slate-50/20 p-5 rounded-xl space-y-4 shadow-2xs">
                       <div className="flex items-center gap-3">
                         <div className="bg-blue-50 text-blue-600 p-2.5 rounded-lg">
-                          <CheckCircle className="h-5 w-5" />
+                          <HugeiconsIcon icon={CheckmarkCircle01Icon} className="h-5 w-5" />
                         </div>
                         <div>
                           <h4 className="font-display font-semibold text-sm text-slate-900">Your Voting Progress</h4>
@@ -140,7 +141,7 @@ export default function DashboardPage() {
                       <div className="pt-2">
                         {hasFinishedVoting ? (
                           <div className="bg-green-50 border border-green-100 text-green-700 p-3 rounded-lg text-xs flex gap-2 items-center">
-                            <CheckCircle className="h-4.5 w-4.5 text-green-600" />
+                            <HugeiconsIcon icon={CheckmarkCircle01Icon} className="h-4.5 w-4.5 text-green-600" />
                             <span>Congratulations! All of your COMPSSA election ballots have been securely sealed.</span>
                           </div>
                         ) : (
@@ -149,7 +150,7 @@ export default function DashboardPage() {
                             className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs px-4  py-2.5 rounded-lg transition-all shadow-xs"
                           >
                             <span>{userVotedCount > 0 ? 'Continue Cast Process' : 'Cast Your Ballots Now'}</span>
-                            <ArrowRight className="h-4 w-4" />
+                            <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" />
                           </button>
                         )}
                       </div>
@@ -159,7 +160,7 @@ export default function DashboardPage() {
                     <div className="border border-slate-100 p-5 rounded-xl bg-slate-50/50 flex flex-col justify-between">
                       <div className="space-y-2">
                         <div className="flex items-center gap-1 text-xs text-slate-500 font-medium">
-                          <Clock className="h-4 w-4" />
+                          <HugeiconsIcon icon={Clock01Icon} className="h-4 w-4" />
                           <span>Closing Deadline</span>
                         </div>
                         <p className="text-xs font-mono font-bold text-slate-800">
@@ -195,7 +196,7 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                   <div className="bg-slate-50 border border-slate-200/60 p-6 rounded-xl text-center space-y-2">
-                    <Clock className="h-8 w-8 text-amber-500 mx-auto" />
+                    <HugeiconsIcon icon={Clock01Icon} className="h-8 w-8 text-amber-500 mx-auto" />
                     <h4 className="font-display font-bold text-sm text-slate-800">Voting Window Closed</h4>
                     <p className="text-xs text-slate-500 max-w-sm mx-auto">
                       All ballots are currently locked for audits. The Electoral Commission will publish the final winner counts shortly.
@@ -208,7 +209,7 @@ export default function DashboardPage() {
                   <div className="mt-4 border border-blue-100 bg-linear-to-b from-blue-50/30 to-blue-50/60 p-5 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <div className="bg-blue-100 text-blue-600 p-2.5 rounded-lg">
-                        <TrendingUp className="h-5 w-5" />
+                        <HugeiconsIcon icon={TrendingUpDownIcon} className="h-5 w-5" />
                       </div>
                       <div>
                         <h4 className="font-display font-semibold text-sm text-slate-900">Your Tally Tracker</h4>
@@ -240,7 +241,7 @@ export default function DashboardPage() {
                   <div className="border border-slate-200/80 p-5 rounded-xl space-y-3.5 bg-linear-to-b from-white to-slate-50/20 shadow-3xs flex flex-col justify-between">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-                        <Users className="h-4.5 w-4.5 text-blue-500" />
+                        <HugeiconsIcon icon={UserGroupIcon} className="h-4.5 w-4.5 text-blue-500" />
                         <span>Registered Turnout</span>
                       </div>
                       <h4 className="text-2xl font-mono font-extrabold text-slate-900 mt-2">
@@ -265,7 +266,7 @@ export default function DashboardPage() {
                   <div className="border border-slate-200/80 p-5 rounded-xl space-y-3 bg-linear-to-b from-white to-slate-50/20 shadow-3xs flex flex-col justify-between">
                     <div>
                       <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-                        <CheckCircle className="h-4.5 w-4.5 text-emerald-500" />
+                        <HugeiconsIcon icon={CheckmarkCircle01Icon} className="h-4.5 w-4.5 text-emerald-500" />
                         <span>Election Controls</span>
                       </div>
                       <p className="text-xs text-slate-600 font-medium mt-3">
@@ -287,7 +288,7 @@ export default function DashboardPage() {
                   <div className="border border-slate-200/80 p-5 rounded-xl bg-slate-50/40 shadow-3xs flex flex-col justify-between">
                     <div>
                       <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-3">
-                        <Activity className="h-4.5 w-4.5 text-rose-500" />
+                        <HugeiconsIcon icon={Activity01Icon} className="h-4.5 w-4.5 text-rose-500" />
                         <span>Quick Setup Actions</span>
                       </div>
                       <span className="block text-2xs uppercase tracking-wider text-slate-400 font-mono font-bold">Voters Database</span>
@@ -309,7 +310,7 @@ export default function DashboardPage() {
                 <div className="border border-slate-200 rounded-xl p-5 bg-white">
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                     <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-                      <History className="h-4 w-4 text-slate-500" />
+                      <HugeiconsIcon icon={Time01Icon} className="h-4 w-4 text-slate-500" />
                       <span>Electoral Audit History Log</span>
                     </div>
                     <span className="text-[10px] font-mono text-slate-400 bg-slate-50 border px-2 py-0.5 rounded">Security Sealed</span>
@@ -338,7 +339,7 @@ export default function DashboardPage() {
                 <div className="col-span-1 md:col-span-2 border border-slate-150 p-5 rounded-xl bg-slate-50/50 space-y-4 shadow-3xs">
                   <div className="flex items-center gap-3">
                     <div className="bg-amber-50 text-amber-600 p-2.5 rounded-lg border border-amber-100">
-                      <Activity className="h-5 w-5" />
+                      <HugeiconsIcon icon={Activity01Icon} className="h-5 w-5" />
                     </div>
                     <div>
                       <h4 className="font-display font-semibold text-sm text-slate-900">Registered Turnout Oversight</h4>

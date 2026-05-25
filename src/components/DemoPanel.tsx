@@ -8,7 +8,8 @@
 import React, { useState } from 'react';
 import { useAuthContext } from '@/features/auth/mockAuth';
 import { useNavigation } from '@/features/auth/navigation';
-import { Sliders, RefreshCw, Sparkles, Shuffle, ShieldAlert, X } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { SlidersHorizontalIcon, RefreshIcon, SparklesIcon, ShuffleIcon, Alert01Icon, Cancel01Icon } from '@hugeicons/core-free-icons';
 
 export default function DemoPanel() {
   const {
@@ -82,7 +83,7 @@ export default function DemoPanel() {
           onClick={() => setIsOpen(true)}
           className="bg-slate-900 border border-slate-750 text-white p-3 rounded-full hover:bg-slate-800 shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group cursor-pointer"
         >
-          <Sliders className="h-5 w-5 stroke-2 text-blue-400 group-hover:rotate-45 transition-transform" />
+          <HugeiconsIcon icon={SlidersHorizontalIcon} className="h-5 w-5 text-blue-400 group-hover:rotate-45 transition-transform" strokeWidth={2} />
           <span className="text-xs font-bold font-display pr-1 hidden sm:inline">Inspect Demo Engine</span>
           {isSimulating && (
             <span className="relative flex h-2 w-2">
@@ -95,14 +96,14 @@ export default function DemoPanel() {
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-76 text-slate-300 shadow-2xl animate-fade-in space-y-4">
           <div className="flex justify-between items-center pb-2 border-b border-slate-800">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-blue-400" />
+              <HugeiconsIcon icon={SparklesIcon} className="h-4 w-4 text-blue-400" />
               <h4 className="font-display font-black text-xs text-white uppercase tracking-wider">Demo Control Board</h4>
             </div>
             <button
               onClick={() => setIsOpen(false)}
               className="p-1 hover:bg-slate-800 rounded-lg text-slate-500"
             >
-              <X className="h-4 w-4" />
+              <HugeiconsIcon icon={Cancel01Icon} className="h-4 w-4" />
             </button>
           </div>
 
@@ -147,7 +148,7 @@ export default function DemoPanel() {
                 onClick={handleTriggerSimulatedVotes}
                 className="w-full flex items-center justify-center gap-1.5 py-2 bg-blue-900 hover:bg-blue-800 text-white font-semibold rounded-lg border border-blue-800 text-[11px] transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <Shuffle className={`h-3.5 w-3.5 ${isSimulating ? 'animate-spin text-amber-400' : 'text-blue-300'}`} />
+                <HugeiconsIcon icon={ShuffleIcon} className={`h-3.5 w-3.5 ${isSimulating ? 'animate-spin text-amber-400' : 'text-blue-300'}`} />
                 <span>{isSimulating ? 'Injecting Ballots...' : 'Simulate Voter Actions'}</span>
               </button>
 
@@ -155,7 +156,7 @@ export default function DemoPanel() {
                 onClick={resetDatabase}
                 className="w-full flex items-center justify-center gap-1.5 py-1.5 bg-slate-800 hover:bg-slate-750 text-red-400 hover:text-red-300 font-semibold rounded-lg border border-slate-750 text-[10px] transition-colors cursor-pointer"
               >
-                <RefreshCw className="h-3 w-3" />
+                <HugeiconsIcon icon={RefreshIcon} className="h-3 w-3" />
                 <span>Reset Database Defaults</span>
               </button>
             </div>

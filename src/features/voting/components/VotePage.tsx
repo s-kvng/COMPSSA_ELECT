@@ -8,7 +8,8 @@
 import React from 'react';
 import { useAuthContext } from '@/features/auth/mockAuth';
 import { useNavigation } from '@/features/auth/navigation';
-import { CheckCircle2, ChevronRight, Lock, HelpCircle } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { CheckmarkCircle01Icon, ArrowRight01Icon, LockIcon, HelpCircleIcon } from '@hugeicons/core-free-icons';
 
 export default function VotePage() {
   const { currentUser, elections, voteRecords } = useAuthContext();
@@ -24,7 +25,7 @@ export default function VotePage() {
       <div id="vote-no-active-state" className="space-y-6 font-sans">
         <div className="bg-amber-50 border border-amber-200 text-amber-800 p-5 rounded-2xl flex flex-col md:flex-row items-center gap-4">
           <div className="bg-amber-100 p-3 rounded-xl">
-            <Lock className="h-6 w-6 text-amber-600" />
+            <HugeiconsIcon icon={LockIcon} className="h-6 w-6 text-amber-600" />
           </div>
           <div>
             <h3 className="font-display font-bold text-sm">Ballot Booth Closed</h3>
@@ -85,7 +86,7 @@ export default function VotePage() {
       {/* Success Completion box */}
       {isCompleted && (
         <div className="bg-green-50 border border-green-200/80 rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-4 shadow-3xs">
-          <CheckCircle2 className="h-10 w-10 text-green-600 shrink-0" />
+          <HugeiconsIcon icon={CheckmarkCircle01Icon} className="h-10 w-10 text-green-600 shrink-0" />
           <div className="space-y-1 text-center sm:text-left">
             <h4 className="font-display font-bold text-sm text-green-900">Your Voting Process is Complete</h4>
             <p className="text-xs text-green-700 font-medium">
@@ -147,7 +148,7 @@ export default function VotePage() {
                       Enter Voting Booth
                     </p>
                   )}
-                  <ChevronRight className="h-4.5 w-4.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                  <HugeiconsIcon icon={ArrowRight01Icon} className="h-4.5 w-4.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
             );

@@ -8,17 +8,18 @@
 import React from 'react';
 import { useAuthContext } from '@/features/auth/mockAuth';
 import { useNavigation } from '@/features/auth/navigation';
+import { HugeiconsIcon } from '@hugeicons/react';
 import {
-  LayoutDashboard,
-  CheckSquare,
-  TrendingUp,
-  Award,
-  Users,
-  Tv,
-  LogOut,
-  Sliders,
-  Sparkles
-} from 'lucide-react';
+  DashboardSquare01Icon,
+  CheckmarkSquare01Icon,
+  TrendingUpDownIcon,
+  Award01Icon,
+  UserGroupIcon,
+  Tv01Icon,
+  Logout01Icon,
+  SlidersHorizontalIcon,
+  SparklesIcon,
+} from '@hugeicons/core-free-icons';
 
 export default function Sidebar() {
   const { currentUser, logout, elections } = useAuthContext();
@@ -33,43 +34,43 @@ export default function Sidebar() {
   const menuItems = [
     {
       name: 'Dashboard',
-      icon: <LayoutDashboard className="h-4.5 w-4.5" />,
+      icon: <HugeiconsIcon icon={DashboardSquare01Icon} className="h-4.5 w-4.5" />,
       targetPath: '/dashboard',
       roles: ['Student', 'Candidate', 'EC', 'HOD'],
     },
     {
       name: 'Vote',
-      icon: <CheckSquare className="h-4.5 w-4.5" />,
+      icon: <HugeiconsIcon icon={CheckmarkSquare01Icon} className="h-4.5 w-4.5" />,
       targetPath: '/vote',
       roles: ['Student', 'Candidate'],
     },
     {
       name: 'My Tally',
-      icon: <TrendingUp className="h-4.5 w-4.5" />,
+      icon: <HugeiconsIcon icon={TrendingUpDownIcon} className="h-4.5 w-4.5" />,
       targetPath: '/dashboard/candidate',
       roles: ['Candidate'],
     },
     {
       name: 'Elections',
-      icon: <Sliders className="h-4.5 w-4.5" />,
+      icon: <HugeiconsIcon icon={SlidersHorizontalIcon} className="h-4.5 w-4.5" />,
       targetPath: '/admin/elections',
       roles: ['EC'],
     },
     {
       name: 'Students',
-      icon: <Users className="h-4.5 w-4.5" />,
+      icon: <HugeiconsIcon icon={UserGroupIcon} className="h-4.5 w-4.5" />,
       targetPath: '/admin/students',
       roles: ['EC'],
     },
     {
       name: 'Electoral Live Tracker',
-      icon: <Tv className="h-4.5 w-4.5 animate-pulse" />,
+      icon: <HugeiconsIcon icon={Tv01Icon} className="h-4.5 w-4.5 animate-pulse" />,
       targetPath: `/admin/elections/${activeElectionId}/live`,
       roles: ['EC'],
     },
     {
       name: 'HOD Live Center',
-      icon: <Tv className="h-4.5 w-4.5" />,
+      icon: <HugeiconsIcon icon={Tv01Icon} className="h-4.5 w-4.5" />,
       targetPath: '/admin/live',
       roles: ['HOD'],
     },
@@ -91,7 +92,7 @@ export default function Sidebar() {
         {/* Logo / Header */}
         <div className="flex items-center gap-2.5 px-2 py-1">
           <div className="bg-indigo-500 text-white p-2 rounded-lg flex items-center justify-center shadow-sm">
-            <Award className="h-5 w-5" />
+            <HugeiconsIcon icon={Award01Icon} className="h-5 w-5" />
           </div>
           <div>
             <h1 className="font-display font-extrabold text-sm tracking-wide text-white leading-none">
@@ -151,7 +152,7 @@ export default function Sidebar() {
             onClick={handleSignOut}
             className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold text-indigo-300 hover:text-white bg-indigo-900/30 hover:bg-indigo-900/50 border border-indigo-700/30 rounded-lg transition-all cursor-pointer"
           >
-            <LogOut className="h-4 w-4" />
+            <HugeiconsIcon icon={Logout01Icon} className="h-4 w-4" />
             <span>Sign Out Control</span>
           </button>
         </div>

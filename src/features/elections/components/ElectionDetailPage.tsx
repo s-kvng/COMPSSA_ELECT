@@ -9,17 +9,18 @@ import React, { useState } from 'react';
 import { useAuthContext } from '@/features/auth/mockAuth';
 import { useNavigation } from '@/features/auth/navigation';
 import StatusBadge from '@/components/StatusBadge';
+import { HugeiconsIcon } from '@hugeicons/react';
 import {
-  ArrowLeft,
-  Plus,
-  Trash2,
-  Lock,
-  ArrowRight,
-  UserPlus,
-  Tv,
-  AlertCircle,
-  Play
-} from 'lucide-react';
+  ArrowLeft01Icon,
+  PlusSignIcon,
+  Delete01Icon,
+  LockIcon,
+  ArrowRight01Icon,
+  UserAdd01Icon,
+  Tv01Icon,
+  AlertCircleIcon,
+  PlayIcon,
+} from '@hugeicons/core-free-icons';
 
 export default function ElectionDetailPage() {
   const {
@@ -128,7 +129,7 @@ export default function ElectionDetailPage() {
             onClick={() => navigateTo('/admin/elections')}
             className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-800 transition-all cursor-pointer"
           >
-            <ArrowLeft className="h-4.5 w-4.5" />
+            <HugeiconsIcon icon={ArrowLeft01Icon} className="h-4.5 w-4.5" />
           </button>
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -151,7 +152,7 @@ export default function ElectionDetailPage() {
                   : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
               }`}
             >
-              <Lock className="h-4 w-4" />
+              <HugeiconsIcon icon={LockIcon} className="h-4 w-4" />
               <span>Lock and Mark Ready</span>
             </button>
           )}
@@ -161,7 +162,7 @@ export default function ElectionDetailPage() {
               onClick={handleActivateManual}
               className="px-4 py-2.5 text-xs font-semibold text-white bg-green-600 hover:bg-green-700 rounded-lg flex items-center gap-1 transition-all shadow-2xs cursor-pointer"
             >
-              <Play className="h-4 w-4" />
+              <HugeiconsIcon icon={PlayIcon} className="h-4 w-4" />
               <span>Activate Early (Live Demo)</span>
             </button>
           )}
@@ -171,7 +172,7 @@ export default function ElectionDetailPage() {
               onClick={handleCloseEarly}
               className="px-4 py-2.5 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-lg flex items-center gap-1 transition-all shadow-2xs cursor-pointer hover:shadow-md"
             >
-              <Lock className="h-4 w-4" />
+              <HugeiconsIcon icon={LockIcon} className="h-4 w-4" />
               <span>Close Election Early</span>
             </button>
           )}
@@ -181,7 +182,7 @@ export default function ElectionDetailPage() {
               onClick={() => navigateTo(`/admin/elections/${election.id}/live`)}
               className="px-4 py-2.5 text-xs font-semibold text-blue-750 bg-blue-50 hover:bg-blue-100 border border-blue-200/50 rounded-lg flex items-center gap-1 transition-all"
             >
-              <Tv className="h-4 w-4" />
+              <HugeiconsIcon icon={Tv01Icon} className="h-4 w-4" />
               <span>Live Monitor</span>
             </button>
           )}
@@ -191,7 +192,7 @@ export default function ElectionDetailPage() {
       {/* Validation alert banner for Draft status editable check */}
       {isEditable && validationErrors.length > 0 && (
         <div className="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-xl space-y-2 flex gap-3 text-xs leading-relaxed">
-          <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+          <HugeiconsIcon icon={AlertCircleIcon} className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="space-y-1">
             <h4 className="font-bold">Setup Validation Parameters Pending ({validationErrors.length})</h4>
             <ul className="list-disc pl-4 space-y-0.5 text-amber-700 font-medium">
@@ -234,7 +235,7 @@ export default function ElectionDetailPage() {
               onClick={() => setShowAddCategoryForm(true)}
               className="w-full py-3 border border-dashed border-slate-250 hover:border-blue-500 hover:bg-blue-50/10 rounded-xl text-xs font-semibold text-slate-600 hover:text-blue-600 flex items-center justify-center gap-1.5 transition-all cursor-pointer select-none"
             >
-              <Plus className="h-4.5 w-4.5 stroke-[2.5]" />
+              <HugeiconsIcon icon={PlusSignIcon} className="h-4.5 w-4.5" strokeWidth={2.5} />
               <span>Add Position Category</span>
             </button>
           )}
@@ -303,7 +304,7 @@ export default function ElectionDetailPage() {
                           className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded-md transition-all duration-100 cursor-pointer"
                           title="Delete Category"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <HugeiconsIcon icon={Delete01Icon} className="h-4 w-4" />
                         </button>
                       )}
                     </div>
@@ -345,7 +346,7 @@ export default function ElectionDetailPage() {
                         onClick={() => setExpandedCategoryIdForCandidate(cat.id)}
                         className="py-1.5 px-3 border border-slate-200 hover:border-blue-500 hover:bg-blue-50/10 text-[11px] font-bold rounded-lg text-slate-600 hover:text-blue-600 flex items-center gap-1 cursor-pointer transition-all"
                       >
-                        <UserPlus className="h-3.5 w-3.5" />
+                        <HugeiconsIcon icon={UserAdd01Icon} className="h-3.5 w-3.5" />
                         <span>Register Candidate</span>
                       </button>
                     )}
@@ -430,7 +431,7 @@ export default function ElectionDetailPage() {
                               className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-md shrink-0 transition-colors cursor-pointer"
                               title="Remove Candidate"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <HugeiconsIcon icon={Delete01Icon} className="h-4 w-4" />
                             </button>
                           )}
                         </div>
