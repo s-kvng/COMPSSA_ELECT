@@ -2,13 +2,6 @@ import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
-/**
- * User roles:
- *  - student   : base role, can vote
- *  - candidate : inherits student permissions + can view own tally
- *  - ec        : Electoral Commission, full election management
- *  - hod       : Head of Department, read-only live observer
- */
 export const userRoleValidator = v.union(
   v.literal("student"),
   v.literal("candidate"),
@@ -16,36 +9,72 @@ export const userRoleValidator = v.union(
   v.literal("hod"),
 );
 
+export const electionStatusValidator = v.union(
+  v.literal("draft"),
+  v.literal("ready"),
+  v.literal("active"),
+  v.literal("closed"),
+  v.literal("published"),
+);
+
 export default defineSchema({
   ...authTables,
 
-  /**
-   * Application users.
-   *
-   * `tokenIdentifier` links this record to the Convex Auth identity
-   * via `ctx.auth.getUserIdentity()`. It is the primary join key between
-   * the auth layer and the application layer.
-   *
-   * `isFirstLogin` is a security control: when true, the user must change
-   * their password before accessing any other part of the application.
-   * It is set to true on account creation and cleared server-side only —
-   * never by client input alone.
-   */
   users: defineTable({
     name: v.string(),
     email: v.string(),
     studentId: v.string(),
     role: userRoleValidator,
     isFirstLogin: v.boolean(),
-    /**
-     * Convex Auth identity subject string.
-     * Format: "<provider>|<userId>"  e.g. "password|abc123"
-     * Stored here so we can look up the application user from any
-     * authenticated request without a secondary index on email.
-     */
-    tokenIdentifier: v.string(),
   })
-    .index("by_token", ["tokenIdentifier"])
     .index("by_email", ["email"])
-    .index("by_student_id", ["studentId"]),
+    .index("by_student_id", ["studentId"])
+    .index("by_role", ["role"]),
+
+  elections: defineTable({
+    title: v.string(),
+    description: v.optional(v.string()),
+    status: electionStatusValidator,
+    startTime: v.number(),
+    endTime: v.number(),
+    earlyClosedAt: v.optional(v.number()),
+    publishedAt: v.optional(v.number()),
+  }).index("by_status", ["status"]),
+
+  categories: defineTable({
+    electionId: v.id("elections"),
+    name: v.string(),
+    description: v.optional(v.string()),
+  }).index("by_election", ["electionId"]),
+
+  candidates: defineTable({
+    electionId: v.id("elections"),
+    categoryId: v.id("categories"),
+    userId: v.id("users"),
+    bio: v.optional(v.string()),
+    photoStorageId: v.optional(v.id("_storage")),
+  })
+    .index("by_election", ["electionId"])
+    .index("by_category", ["categoryId"])
+    .index("by_user_election", ["userId", "electionId"]),
+
+  voted_log: defineTable({
+    electionId: v.id("elections"),
+    studentId: v.id("users"),
+    categoryId: v.id("categories"),
+    candidateId: v.id("candidates"),
+    timestamp: v.number(),
+  })
+    .index("by_voter_category", ["studentId", "categoryId"])
+    .index("by_voter_election", ["studentId", "electionId"])
+    .index("by_election", ["electionId"])
+    .index("by_candidate", ["candidateId"]),
+
+  ec_action_log: defineTable({
+    electionId: v.id("elections"),
+    action: v.string(),
+    actorId: v.id("users"),
+    timestamp: v.number(),
+    metadata: v.optional(v.string()),
+  }).index("by_election", ["electionId"]),
 });
