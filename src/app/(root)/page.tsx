@@ -143,7 +143,7 @@ export default function LandingPage() {
           >
             <div className="space-y-0.5">
               <p className="font-mono text-[9px] uppercase tracking-widest">General Elections</p>
-              <p className="font-mono text-[9px] uppercase tracking-widest">University of Ghana</p>
+              <p className="font-mono text-[9px] uppercase tracking-widest">Koforidua Technical University</p>
             </div>
             <div className="text-right space-y-0.5">
               <p className="font-mono text-[9px] uppercase tracking-widest">Certified</p>
