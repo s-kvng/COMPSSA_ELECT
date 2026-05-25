@@ -1,117 +1,257 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 'use client';
 
 import React from 'react';
 import { useNavigation } from '../../features/auth/navigation';
 import { useAuthContext } from '../../features/auth/mockAuth';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Award01Icon, ArrowRight01Icon, CheckmarkSquare01Icon, Shield01Icon, FavouriteIcon, UserGroupIcon } from '@hugeicons/core-free-icons';
+import { Award01Icon, ArrowRight01Icon, Shield01Icon, CheckmarkCircle01Icon } from '@hugeicons/core-free-icons';
 
 export default function LandingPage() {
   const { navigateTo } = useNavigation();
   const { currentUser } = useAuthContext();
 
   return (
-    <div id="landing-hero" className="min-h-screen bg-linear-to-b from-slate-50 to-slate-100 flex flex-col justify-between font-sans select-none animate-fade-in text-left">
-      {/* Navbar segment */}
-      <header className="max-w-7xl mx-auto w-full px-6 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="bg-blue-600 text-white p-2 rounded-xl shadow-xs">
-            <HugeiconsIcon icon={Award01Icon} className="h-5 w-5" />
-          </div>
-          <div>
-            <h1 className="font-display font-black text-sm text-slate-900 tracking-wide uppercase">
-              COMPSSA
-            </h1>
-            <p className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mt-0.5 leading-none">
-              Electoral Board
-            </p>
-          </div>
-        </div>
+    <>
+      <style>{`
+        @keyframes ring-slow {
+          0%, 100% { opacity: 0.12; transform: translate(-50%, -50%) scale(1); }
+          50%       { opacity: 0.22; transform: translate(-50%, -50%) scale(1.018); }
+        }
+        @keyframes ring-mid {
+          0%, 100% { opacity: 0.08; transform: translate(-50%, -50%) scale(1); }
+          50%       { opacity: 0.16; transform: translate(-50%, -50%) scale(1.025); }
+        }
+        @keyframes icon-float {
+          0%, 100% { transform: translateY(0px); }
+          50%       { transform: translateY(-7px); }
+        }
+        @keyframes slide-up {
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .rv  { animation: slide-up 0.55s cubic-bezier(0.16,1,0.3,1) both; }
+        .rv1 { animation-delay: 0.04s; }
+        .rv2 { animation-delay: 0.14s; }
+        .rv3 { animation-delay: 0.24s; }
+        .rv4 { animation-delay: 0.36s; }
+        .rv5 { animation-delay: 0.46s; }
+      `}</style>
 
-        <button
-          onClick={() => navigateTo(currentUser ? '/dashboard' : '/login')}
-          className="px-4.5 py-2 text-xs font-semibold text-slate-800 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all hover:shadow-2xs shadow-3xs cursor-pointer"
+      <div className="h-screen w-screen overflow-hidden flex font-sans select-none">
+
+        {/* ── LEFT VISUAL PANEL ─────────────────────────── */}
+        <div
+          className="hidden lg:flex w-[52%] shrink-0 relative overflow-hidden flex-col justify-between"
+          style={{ backgroundColor: 'oklch(0.13 0.018 248)' }}
         >
-          {currentUser ? 'Enter Console' : 'Sign In Portal'}
-        </button>
-      </header>
+          {/* Dot grid */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundImage: 'radial-gradient(circle, oklch(0.30 0.055 248) 1px, transparent 1px)',
+              backgroundSize: '28px 28px',
+              opacity: 0.5,
+            }}
+          />
 
-      {/* Hero Section */}
-      <main className="max-w-4xl mx-auto px-6 py-12 flex flex-col items-center justify-center text-center space-y-8 my-auto">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-200/50 rounded-full font-mono text-[10px] text-blue-700 font-bold uppercase tracking-wider">
-          <Sparkles className="h-3.5 w-3.5 animate-pulse text-blue-600" />
-          <span>Legitimacy • transparency • certified math</span>
+          {/* Outer ring */}
+          <div
+            className="absolute rounded-full border pointer-events-none"
+            style={{
+              top: '50%', left: '50%',
+              width: 540, height: 540,
+              borderColor: 'oklch(0.36 0.09 248)',
+              borderWidth: 1,
+              animation: 'ring-mid 7s ease-in-out infinite',
+            }}
+          />
+          {/* Mid ring */}
+          <div
+            className="absolute rounded-full border pointer-events-none"
+            style={{
+              top: '50%', left: '50%',
+              width: 390, height: 390,
+              borderColor: 'oklch(0.42 0.12 248)',
+              borderWidth: 1,
+              animation: 'ring-slow 5s ease-in-out infinite',
+            }}
+          />
+          {/* Glow pool behind icon */}
+          <div
+            className="absolute pointer-events-none"
+            style={{
+              top: '50%', left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: 220, height: 220,
+              borderRadius: '50%',
+              background: 'radial-gradient(circle, oklch(0.6723 0.1606 244.99 / 0.14) 0%, transparent 70%)',
+            }}
+          />
+
+          {/* Center composition */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-6">
+            <div
+              className="flex items-center justify-center rounded-2xl"
+              style={{
+                width: 76, height: 76,
+                backgroundColor: 'oklch(0.6723 0.1606 244.99)',
+                boxShadow: '0 0 56px oklch(0.6723 0.1606 244.99 / 0.4)',
+                animation: 'icon-float 4.5s ease-in-out infinite',
+              }}
+            >
+              <HugeiconsIcon icon={Award01Icon} className="h-9 w-9 text-white" strokeWidth={1.8} />
+            </div>
+
+            <div className="text-center space-y-1.5">
+              <p
+                className="font-mono text-[10px] uppercase tracking-[0.35em] font-bold"
+                style={{ color: 'oklch(0.52 0.09 248)' }}
+              >
+                Electoral Commission
+              </p>
+              <p
+                className="font-sans font-black leading-none tracking-tighter"
+                style={{
+                  fontSize: 100,
+                  color: 'oklch(0.195 0.022 248)',
+                }}
+              >
+                2026
+              </p>
+            </div>
+          </div>
+
+          {/* Rotated brand label on left edge */}
+          <div
+            className="absolute font-mono text-[9px] uppercase tracking-[0.38em] font-bold pointer-events-none"
+            style={{
+              color: 'oklch(0.32 0.055 248)',
+              writingMode: 'vertical-rl',
+              transform: 'rotate(180deg)',
+              left: 28,
+              top: '50%',
+              marginTop: -120,
+            }}
+          >
+            COMPSSA · Dept. of Computer Science
+          </div>
+
+          {/* Bottom metadata */}
+          <div
+            className="relative z-10 p-8 flex items-end justify-between"
+            style={{ color: 'oklch(0.40 0.06 248)' }}
+          >
+            <div className="space-y-0.5">
+              <p className="font-mono text-[9px] uppercase tracking-widest">General Elections</p>
+              <p className="font-mono text-[9px] uppercase tracking-widest">University of Ghana</p>
+            </div>
+            <div className="text-right space-y-0.5">
+              <p className="font-mono text-[9px] uppercase tracking-widest">Certified</p>
+              <p className="font-mono text-[9px] uppercase tracking-widest">& Sealed ✓</p>
+            </div>
+          </div>
+
+          {/* Right-edge gradient separator */}
+          <div
+            className="absolute top-0 right-0 bottom-0 w-px pointer-events-none"
+            style={{
+              background: 'linear-gradient(to bottom, transparent, oklch(0.27 0.055 248) 25%, oklch(0.27 0.055 248) 75%, transparent)',
+            }}
+          />
         </div>
 
-        <div className="space-y-4">
-          <h2 className="font-display font-black text-4xl sm:text-5xl text-slate-900 tracking-tight leading-tight max-w-2xl mx-auto">
-            The Digital Voice of the <span className="text-blue-600">Computer Science</span> Department
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-500 max-w-lg mx-auto leading-relaxed">
-            Eliminating candidate disputes and administrative tally overhead. COMPSSA Election platform compiles and encrypts student ballots into verified local audit ledgers.
+        {/* ── RIGHT CONTENT PANEL ───────────────────────── */}
+        <div className="flex-1 flex flex-col justify-between px-10 py-9 lg:px-14 lg:py-11 bg-background overflow-hidden">
+
+          {/* Top bar */}
+          <div className="flex items-center justify-between rv rv1">
+            <div className="flex items-center gap-2.5 lg:hidden">
+              <div
+                className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
+                style={{ backgroundColor: 'var(--color-accent)' }}
+              >
+                <HugeiconsIcon icon={Award01Icon} className="h-4 w-4 text-white" strokeWidth={2} />
+              </div>
+              <span className="font-mono text-xs font-bold uppercase tracking-wider text-foreground">COMPSSA</span>
+            </div>
+            <div className="hidden lg:block" />
+
+            <button
+              onClick={() => navigateTo(currentUser ? '/dashboard' : '/login')}
+              className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {currentUser ? 'Enter Console →' : 'Sign in →'}
+            </button>
+          </div>
+
+          {/* Centre content */}
+          <div className="space-y-8 max-w-[340px]">
+            <p
+              className="font-mono text-[10px] uppercase tracking-[0.2em] font-bold rv rv2"
+              style={{ color: 'var(--color-accent)' }}
+            >
+              COMPSSA · 2026 General Elections
+            </p>
+
+            <div className="space-y-4 rv rv3">
+              <h1
+                className="font-sans font-black text-foreground leading-[1.04] tracking-tight"
+                style={{ fontSize: 'clamp(2.4rem, 4.5vw, 3.15rem)' }}
+              >
+                Your<br />Department.<br />
+                <span style={{ color: 'var(--color-accent)' }}>Your Voice.</span>
+              </h1>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                The official digital ballot platform for COMPSSA. Every vote is sealed, anonymised, and cryptographically verified by the Electoral Commission.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 rv rv4">
+              <button
+                onClick={() => navigateTo(currentUser ? '/dashboard' : '/login')}
+                className="flex items-center justify-between px-5 py-3.5 text-sm font-semibold text-primary-foreground rounded-xl transition-all group shadow-sm hover:opacity-90"
+                style={{ backgroundColor: 'var(--color-accent)' }}
+              >
+                <span>Enter Voting Booth</span>
+                <HugeiconsIcon
+                  icon={ArrowRight01Icon}
+                  className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+                />
+              </button>
+              <button
+                onClick={() => navigateTo('/results/elect-2026')}
+                className="px-5 py-3.5 text-sm font-semibold text-muted-foreground border border-border rounded-xl hover:bg-muted transition-all"
+              >
+                View Public Results
+              </button>
+            </div>
+
+            <div className="flex items-center gap-5 rv rv5">
+              <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono">
+                <HugeiconsIcon
+                  icon={CheckmarkCircle01Icon}
+                  className="h-3.5 w-3.5 shrink-0"
+                  style={{ color: 'var(--color-success)' }}
+                />
+                Irrevocable ballots
+              </span>
+              <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono">
+                <HugeiconsIcon
+                  icon={Shield01Icon}
+                  className="h-3.5 w-3.5 shrink-0"
+                  style={{ color: 'var(--color-accent)' }}
+                />
+                Anonymised records
+              </span>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <p className="font-mono text-[9px] text-muted-foreground/40 uppercase tracking-wider rv rv1">
+            © 2026 Department of Computer Science · Ghana
           </p>
         </div>
-
-        <div className="flex flex-col sm:flex-row gap-3 justify-center w-full max-w-xs sm:max-w-none">
-          <button
-            onClick={() => navigateTo(currentUser ? '/dashboard' : '/login')}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-md hover:shadow-lg hover:shadow-blue-500/10 cursor-pointer transition-all"
-          >
-            <span>Enter Voting Booth</span>
-            <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => navigateTo('/results/elect-2026')}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-350 text-slate-700 font-semibold text-xs rounded-xl shadow-2xs cursor-pointer transition-all"
-          >
-            <span>View Public Results</span>
-          </button>
-        </div>
-
-        {/* Triple selling values cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-8 w-full">
-          <div className="border border-slate-200/70 p-5 bg-white/70 backdrop-blur-xs rounded-xl shadow-3xs text-left space-y-2">
-            <HugeiconsIcon icon={CheckmarkSquare01Icon} className="h-5 w-5 text-emerald-500" strokeWidth={2} />
-            <h4 className="font-display font-bold text-xs text-slate-900 mt-2">Irrevocable Balloting</h4>
-            <p className="text-[11px] text-slate-400 leading-normal">Each student cast is signed, securely logged, and completely unalterable after confirmation.</p>
-          </div>
-          <div className="border border-slate-200/70 p-5 bg-white/70 backdrop-blur-xs rounded-xl shadow-3xs text-left space-y-2">
-            <HugeiconsIcon icon={Shield01Icon} className="h-5 w-5 text-blue-500" strokeWidth={2} />
-            <h4 className="font-display font-bold text-xs text-slate-900 mt-2">Anonymity Safeguard</h4>
-            <p className="text-[11px] text-slate-400 leading-normal">Independent voter records are pseudoymized. Nobody can associate your name to your selected candidate choices.</p>
-          </div>
-          <div className="border border-slate-200/70 p-5 bg-white/70 backdrop-blur-xs rounded-xl shadow-3xs text-left space-y-2">
-            <HugeiconsIcon icon={UserGroupIcon} className="h-5 w-5 text-purple-500" strokeWidth={2} />
-            <h4 className="font-display font-bold text-xs text-slate-900 mt-2">Verified Roster Match</h4>
-            <p className="text-[11px] text-slate-400 leading-normal">The Electoral Commission manages verified student ID lists. Only enroled members of COMPSSA can enter.</p>
-          </div>
-        </div>
-      </main>
-
-      {/* Footer lockup */}
-      <footer className="border-t border-slate-200/50 py-6 text-center text-[10px] font-mono text-slate-400">
-        <p>Department of Computer Science • Association of Ghana Computer Science Students</p>
-        <p className="mt-1 flex items-center justify-center gap-1.5">
-          <span>Engineered with pure respect for students voice</span>
-          <HugeiconsIcon icon={FavouriteIcon} className="h-3 w-3 text-red-500" />
-        </p>
-      </footer>
-    </div>
-  );
-}
-
-// Sparkler proxy
-function Sparkles({ className = '' }: { className?: string }) {
-  return (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275Z"/>
-      <path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5Z"/>
-      <path d="m19 17 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1Z"/>
-    </svg>
+      </div>
+    </>
   );
 }
