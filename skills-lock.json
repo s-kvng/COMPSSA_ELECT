@@ -2,10 +2,10 @@
   "version": 1,
   "skills": {
     "convex": {
-      "source": "get-convex/agent-skills",
+      "source": "waynesutton/convexskills",
       "sourceType": "github",
       "skillPath": "skills/convex/SKILL.md",
-      "computedHash": "c5f3622c64ef550aac27d1dbc041f0c7c40d9119863c9fb8bac180b0498ee8ed"
+      "computedHash": "de7a20d081cd19bf8bce4038bd62d038a0a88f218f85afb35320d09b052fb534"
     },
     "convex-create-component": {
       "source": "get-convex/agent-skills",
