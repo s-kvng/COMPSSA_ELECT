@@ -12,7 +12,7 @@ const isProtectedRoute = createRouteMatcher([
   "/first-login(.*)",
 ]);
 
-export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
+export const proxy = convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
   const authenticated = await convexAuth.isAuthenticated();
   console.log("Authenticated: ", authenticated);
 

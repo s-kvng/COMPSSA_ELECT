@@ -35,18 +35,22 @@ export default function RootLayout({
     <ConvexAuthNextjsServerProvider>
       <html
         lang="en"
-        className={cn("h-full antialiased", spaceGrotesk.variable, jetbrainsMono.variable)}
+        className={cn(
+          "h-full antialiased",
+          spaceGrotesk.variable,
+          jetbrainsMono.variable,
+        )}
       >
         <body className="min-h-full flex flex-col font-sans">
-          <AuthProvider>
-            <NavigationProvider>
-              <TooltipProvider>
-                <ConvexClientProvider>
+          <ConvexClientProvider>
+            <AuthProvider>
+              <NavigationProvider>
+                <TooltipProvider>
                   <RouteGuard>{children}</RouteGuard>
-                </ConvexClientProvider>
-              </TooltipProvider>
-            </NavigationProvider>
-          </AuthProvider>
+                </TooltipProvider>
+              </NavigationProvider>
+            </AuthProvider>
+          </ConvexClientProvider>
         </body>
       </html>
     </ConvexAuthNextjsServerProvider>

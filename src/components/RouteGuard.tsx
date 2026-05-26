@@ -19,6 +19,10 @@ export default function RouteGuard({ children }: RouteGuardProps) {
     if (authState.status !== 'authenticated') return;
     const { user } = authState;
 
+    if (pathname === '/login') {
+      router.push('/dashboard');
+      return;
+    }
     if (user.isFirstLogin && pathname !== '/first-login') {
       router.push('/first-login');
     } else if (!user.isFirstLogin && pathname === '/first-login') {

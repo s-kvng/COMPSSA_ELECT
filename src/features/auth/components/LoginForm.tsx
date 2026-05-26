@@ -2,11 +2,13 @@
 
 import React, { useState } from 'react';
 import { useAuthActions } from '@convex-dev/auth/react';
+import { useRouter } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Mail01Icon, LockPasswordIcon, ArrowRight01Icon, Alert01Icon, Award01Icon } from '@hugeicons/core-free-icons';
 
 export default function LoginForm() {
   const { signIn } = useAuthActions();
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -24,7 +26,7 @@ export default function LoginForm() {
 
     try {
       await signIn('password', { flow: 'signIn', email, password });
-      // RouteGuard will handle redirect once auth state updates
+      router.push('/dashboard');
     } catch {
       setErrorMessage('Invalid email or password. Please try again.');
     } finally {
