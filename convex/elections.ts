@@ -4,6 +4,23 @@ import { internalMutation, mutation, query } from "./_generated/server";
 import { getUser } from "./lib/auth";
 import { electionStatusValidator } from "./schema";
 
+export const getLatestPublishedElection = query({
+  args: {},
+  returns: v.union(
+    v.object({ _id: v.id("elections"), title: v.string() }),
+    v.null(),
+  ),
+  handler: async (ctx) => {
+    const election = await ctx.db
+      .query("elections")
+      .withIndex("by_status", (q) => q.eq("status", "published"))
+      .order("desc")
+      .first();
+    if (!election) return null;
+    return { _id: election._id, title: election.title };
+  },
+});
+
 export const createElection = mutation({
   args: {
     title: v.string(),
@@ -78,6 +95,106 @@ export const getElections = query({
     const user = await getUser(ctx);
     if (user.role !== "ec") throw new ConvexError("Forbidden");
     return await ctx.db.query("elections").order("desc").take(100);
+  },
+});
+
+export const getCurrentElection = query({
+  args: {},
+  returns: v.union(
+    v.null(),
+    v.object({
+      _id: v.id("elections"),
+      title: v.string(),
+      description: v.optional(v.string()),
+      status: electionStatusValidator,
+      startTime: v.number(),
+      endTime: v.number(),
+      earlyClosedAt: v.optional(v.number()),
+      publishedAt: v.optional(v.number()),
+      categories: v.array(
+        v.object({
+          _id: v.id("categories"),
+          name: v.string(),
+          description: v.optional(v.string()),
+          candidates: v.array(
+            v.object({
+              _id: v.id("candidates"),
+              userId: v.id("users"),
+              userName: v.string(),
+              bio: v.optional(v.string()),
+            }),
+          ),
+        }),
+      ),
+    }),
+  ),
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+
+    const user = await ctx.db.get(userId);
+    const isEcOrHod = user?.role === "ec" || user?.role === "hod";
+
+    let election = null;
+    for (const status of ["active", "closed", "ready", "published"] as const) {
+      const results = await ctx.db
+        .query("elections")
+        .withIndex("by_status", (q) => q.eq("status", status))
+        .take(1);
+      if (results.length > 0) {
+        election = results[0];
+        break;
+      }
+    }
+    if (!election) return null;
+
+    const isAccessible = ["active", "closed", "published"].includes(election.status);
+    if (!isEcOrHod && !isAccessible) return null;
+
+    const categories = await ctx.db
+      .query("categories")
+      .withIndex("by_election", (q) => q.eq("electionId", election._id))
+      .take(50);
+
+    const categoriesWithCandidates = await Promise.all(
+      categories.map(async (category) => {
+        const candidateDocs = await ctx.db
+          .query("candidates")
+          .withIndex("by_category", (q) => q.eq("categoryId", category._id))
+          .take(20);
+
+        const candidates = await Promise.all(
+          candidateDocs.map(async (c) => {
+            const candUser = await ctx.db.get(c.userId);
+            return {
+              _id: c._id,
+              userId: c.userId,
+              userName: candUser?.name ?? "Unknown",
+              bio: c.bio,
+            };
+          }),
+        );
+
+        return {
+          _id: category._id,
+          name: category.name,
+          description: category.description,
+          candidates,
+        };
+      }),
+    );
+
+    return {
+      _id: election._id,
+      title: election.title,
+      description: election.description,
+      status: election.status,
+      startTime: election.startTime,
+      endTime: election.endTime,
+      earlyClosedAt: election.earlyClosedAt,
+      publishedAt: election.publishedAt,
+      categories: categoriesWithCandidates,
+    };
   },
 });
 

@@ -16,8 +16,8 @@ import type * as ec_actions from "../ec_actions.js";
 import type * as elections from "../elections.js";
 import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
-import type * as lib_types from "../lib/types.js";
 import type * as results from "../results.js";
+import type * as seed from "../seed.js";
 import type * as users from "../users.js";
 import type * as votes from "../votes.js";
 
@@ -36,8 +36,8 @@ declare const fullApi: ApiFromModules<{
   elections: typeof elections;
   http: typeof http;
   "lib/auth": typeof lib_auth;
-  "lib/types": typeof lib_types;
   results: typeof results;
+  seed: typeof seed;
   users: typeof users;
   votes: typeof votes;
 }>;

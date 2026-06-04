@@ -2,9 +2,11 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useAuthContext } from "@/features/auth/mockAuth"
-import { useNavigation } from "@/features/auth/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { useQuery } from "convex/react"
+import { useAuthActions } from "@convex-dev/auth/react"
+import { useCurrentUser } from "@/shared/auth"
+import { api } from "../../convex/_generated/api"
 import {
   Sidebar,
   SidebarContent,
@@ -39,34 +41,34 @@ interface NavItem {
   badge?: React.ReactNode
 }
 
-function buildNavItems(activeElectionId: string): NavItem[] {
+function buildNavItems(activeElectionId: string | null): NavItem[] {
   return [
     {
       title: "Dashboard",
       url: "/dashboard",
       icon: DashboardSquare01Icon,
-      roles: ["Student", "Candidate", "EC", "HOD"],
+      roles: ["student", "candidate", "ec", "hod"],
       isActive: (p) => p === "/dashboard",
     },
     {
       title: "Vote",
       url: "/vote",
       icon: CheckmarkSquare01Icon,
-      roles: ["Student", "Candidate"],
+      roles: ["student", "candidate"],
       isActive: (p) => p === "/vote" || p.startsWith("/vote/"),
     },
     {
       title: "My Tally",
       url: "/dashboard/candidate",
       icon: TrendingUpDownIcon,
-      roles: ["Candidate"],
+      roles: ["candidate"],
       isActive: (p) => p === "/dashboard/candidate",
     },
     {
       title: "Elections",
       url: "/admin/elections",
       icon: SlidersHorizontalIcon,
-      roles: ["EC"],
+      roles: ["ec"],
       isActive: (p) =>
         p === "/admin/elections" ||
         (p.startsWith("/admin/elections/") && !p.endsWith("/live")),
@@ -75,14 +77,14 @@ function buildNavItems(activeElectionId: string): NavItem[] {
       title: "Students",
       url: "/admin/students",
       icon: UserGroupIcon,
-      roles: ["EC"],
+      roles: ["ec"],
       isActive: (p) => p === "/admin/students",
     },
     {
       title: "Live Tracker",
-      url: `/admin/elections/${activeElectionId}/live`,
+      url: activeElectionId ? `/admin/elections/${activeElectionId}/live` : "#",
       icon: Tv01Icon,
-      roles: ["EC"],
+      roles: ["ec"],
       isActive: (p) => p.endsWith("/live") && p.startsWith("/admin/elections/"),
       badge: (
         <span className="ml-auto size-2 rounded-full bg-(--color-success) animate-pulse" />
@@ -92,33 +94,31 @@ function buildNavItems(activeElectionId: string): NavItem[] {
       title: "Live Dashboard",
       url: "/admin/live",
       icon: Tv01Icon,
-      roles: ["HOD"],
+      roles: ["hod"],
       isActive: (p) => p === "/admin/live",
     },
   ]
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { currentUser, elections, logout } = useAuthContext()
-  const { navigateTo } = useNavigation()
+  const currentUser = useCurrentUser()
+  const { signOut } = useAuthActions()
+  const router = useRouter()
   const pathname = usePathname()
   const { isMobile, setOpenMobile } = useSidebar()
 
+  const currentElection = useQuery(api.elections.getCurrentElection)
+
   if (!currentUser) return null
 
-  const activeElection = elections.find(
-    (e) => e.status === "Active" || e.status === "Ready" || e.status === "Closed"
-  )
-  const activeElectionId = activeElection?.id ?? elections[0]?.id ?? "elect-2026"
-
+  const activeElectionId = currentElection?._id ?? null
   const allItems = buildNavItems(activeElectionId)
   const allowedItems = allItems.filter((item) =>
     item.roles.includes(currentUser.role as Role)
   )
 
-  // Hide the Live Tracker link if no election exists yet
   const visibleItems = allowedItems.filter(
-    (item) => item.title !== "Live Tracker" || !!activeElection
+    (item) => item.title !== "Live Tracker" || !!activeElectionId
   )
 
   const initials = currentUser.name
@@ -128,9 +128,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     .slice(0, 2)
     .toUpperCase()
 
-  const handleLogout = () => {
-    logout()
-    navigateTo("/login")
+  const handleLogout = async () => {
+    await signOut()
+    router.push("/login")
   }
 
   return (
@@ -184,7 +184,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             name: currentUser.name,
             role: currentUser.role,
             initials,
-            avatarUrl: currentUser.avatarUrl,
+            avatarUrl: undefined,
           }}
           onLogout={handleLogout}
         />

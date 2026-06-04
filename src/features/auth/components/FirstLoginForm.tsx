@@ -1,19 +1,15 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 'use client';
 
 import React, { useState } from 'react';
-import { useAuthContext } from '@/features/auth/mockAuth';
-import { useNavigation } from '@/features/auth/navigation';
+import { useAction } from 'convex/react';
+import { useCurrentUser } from '@/shared/auth';
+import { api } from '../../../../convex/_generated/api';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Key01Icon, Alert01Icon, LockIcon } from '@hugeicons/core-free-icons';
 
 export default function FirstLoginForm() {
-  const { completeFirstLogin, currentUser } = useAuthContext();
-  const { navigateTo } = useNavigation();
+  const currentUser = useCurrentUser();
+  const completeFirstLogin = useAction(api.users.completeFirstLogin);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -21,28 +17,28 @@ export default function FirstLoginForm() {
 
   if (!currentUser) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
 
     if (password.length < 8) {
-      setErrorMessage('Security constraint: Your new password must be at least 8 characters long.');
+      setErrorMessage('Your new password must be at least 8 characters long.');
       return;
     }
-
     if (password !== confirmPassword) {
-      setErrorMessage('Validation error: Passwords do not match. Please verify.');
+      setErrorMessage('Passwords do not match. Please verify.');
       return;
     }
 
     setIsSubmitting(true);
-
-    // Simulate database write save latency
-    setTimeout(() => {
-      completeFirstLogin();
+    try {
+      await completeFirstLogin({ newPassword: password });
+      // RouteGuard detects isFirstLogin: false and redirects to /dashboard
+    } catch {
+      setErrorMessage('Failed to save. Please try again.');
+    } finally {
       setIsSubmitting(false);
-      navigateTo('/vote');
-    }, 600);
+    }
   };
 
   return (
@@ -56,8 +52,8 @@ export default function FirstLoginForm() {
         <h2 className="text-center font-display font-extrabold text-2xl text-slate-900 leading-tight">
           Establish New Password
         </h2>
-        <p className="mt-2 text-center text-xs text-slate-500 max-w">
-          Welcome, <strong>{currentUser.name}</strong>. Before casting your official ballot, you must update the default admin-assigned credentials.
+        <p className="mt-2 text-center text-xs text-slate-500">
+          Welcome, <strong>{currentUser.name}</strong>. Before casting your official ballot, update the default admin-assigned credentials.
         </p>
       </div>
 
@@ -88,34 +84,30 @@ export default function FirstLoginForm() {
               <label htmlFor="new-password" className="block text-xs font-semibold text-slate-700">
                 New Secure Password
               </label>
-              <div className="mt-1.5 relative">
-                <input
-                  type="password"
-                  id="new-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Min 8 characters"
-                  className="block w-full px-3 py-2 text-xs border border-slate-200 bg-slate-50/50 hover:bg-slate-50 focus:bg-white rounded-md placeholder-slate-400 text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                />
-              </div>
+              <input
+                type="password"
+                id="new-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Min 8 characters"
+                className="mt-1.5 block w-full px-3 py-2 text-xs border border-slate-200 bg-slate-50/50 hover:bg-slate-50 focus:bg-white rounded-md placeholder-slate-400 text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+              />
             </div>
 
             <div>
               <label htmlFor="confirm-password" className="block text-xs font-semibold text-slate-700">
                 Confirm New Password
               </label>
-              <div className="mt-1.5 relative">
-                <input
-                  type="password"
-                  id="confirm-password"
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Re-enter password"
-                  className="block w-full px-3 py-2 text-xs border border-slate-200 bg-slate-50/50 hover:bg-slate-50 focus:bg-white rounded-md placeholder-slate-400 text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                />
-              </div>
+              <input
+                type="password"
+                id="confirm-password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Re-enter password"
+                className="mt-1.5 block w-full px-3 py-2 text-xs border border-slate-200 bg-slate-50/50 hover:bg-slate-50 focus:bg-white rounded-md placeholder-slate-400 text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+              />
             </div>
 
             <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-3 text-[11px] text-blue-800 flex gap-2 items-start">
@@ -123,19 +115,17 @@ export default function FirstLoginForm() {
               <span>Your records are encrypted and verified. Casting a ballot is irreversible and securely anchored.</span>
             </div>
 
-            <div>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full flex justify-center items-center gap-2 py-2.5 px-4 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-md shadow-xs cursor-pointer hover:shadow-md transition-all"
-              >
-                {isSubmitting ? (
-                  <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <span>Set Password & Enter Voting Booth</span>
-                )}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full flex justify-center items-center gap-2 py-2.5 px-4 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-md shadow-xs cursor-pointer hover:shadow-md transition-all"
+            >
+              {isSubmitting ? (
+                <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <span>Set Password &amp; Enter Voting Booth</span>
+              )}
+            </button>
           </form>
         </div>
       </div>
