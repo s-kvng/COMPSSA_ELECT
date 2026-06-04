@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useMutation } from 'convex/react';
+import { useAction } from 'convex/react';
 import { useCurrentUser } from '@/shared/auth';
 import { api } from '../../../../convex/_generated/api';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -9,7 +9,7 @@ import { Key01Icon, Alert01Icon, LockIcon } from '@hugeicons/core-free-icons';
 
 export default function FirstLoginForm() {
   const currentUser = useCurrentUser();
-  const completeFirstLogin = useMutation(api.users.setIsFirstLoginComplete);
+  const completeFirstLogin = useAction(api.users.completeFirstLogin);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -32,7 +32,7 @@ export default function FirstLoginForm() {
 
     setIsSubmitting(true);
     try {
-      await completeFirstLogin({});
+      await completeFirstLogin({ newPassword: password });
       // RouteGuard detects isFirstLogin: false and redirects to /dashboard
     } catch {
       setErrorMessage('Failed to save. Please try again.');

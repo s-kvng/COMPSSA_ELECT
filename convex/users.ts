@@ -1,6 +1,7 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { getAuthUserId, modifyAccountCredentials } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { action, internalMutation, mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { getUser } from "./lib/auth";
 import { userRoleValidator } from "./schema";
 import type { Id } from "./_generated/dataModel";
@@ -64,13 +65,32 @@ export const getStudents = query({
   },
 });
 
-export const setIsFirstLoginComplete = mutation({
-  args: {},
+const markFirstLoginDone = internalMutation({
+  args: { userId: v.id("users") },
   returns: v.null(),
-  handler: async (ctx): Promise<null> => {
-    const user = await getUser(ctx);
-    if (!user.isFirstLogin) return null;
-    await ctx.db.patch(user._id, { isFirstLogin: false });
+  handler: async (ctx, { userId }): Promise<null> => {
+    await ctx.db.patch(userId, { isFirstLogin: false });
+    return null;
+  },
+});
+
+export const completeFirstLogin = action({
+  args: { newPassword: v.string() },
+  returns: v.null(),
+  handler: async (ctx, { newPassword }): Promise<null> => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new ConvexError("Unauthenticated");
+
+    const identity = await ctx.auth.getUserIdentity();
+    const email = identity?.email;
+    if (!email) throw new ConvexError("Could not resolve user email");
+
+    await modifyAccountCredentials(ctx, {
+      provider: "password",
+      account: { id: email, secret: newPassword },
+    });
+
+    await ctx.runMutation(internal.users.markFirstLoginDone, { userId });
     return null;
   },
 });
