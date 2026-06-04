@@ -1,6 +1,6 @@
 import { getAuthUserId, modifyAccountCredentials } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
-import { action, internalMutation, mutation, query } from "./_generated/server";
+import { action, internalMutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { getUser } from "./lib/auth";
 import { userRoleValidator } from "./schema";
