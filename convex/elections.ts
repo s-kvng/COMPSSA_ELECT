@@ -4,6 +4,23 @@ import { internalMutation, mutation, query } from "./_generated/server";
 import { getUser } from "./lib/auth";
 import { electionStatusValidator } from "./schema";
 
+export const getLatestPublishedElection = query({
+  args: {},
+  returns: v.union(
+    v.object({ _id: v.id("elections"), title: v.string() }),
+    v.null(),
+  ),
+  handler: async (ctx) => {
+    const election = await ctx.db
+      .query("elections")
+      .withIndex("by_status", (q) => q.eq("status", "published"))
+      .order("desc")
+      .first();
+    if (!election) return null;
+    return { _id: election._id, title: election.title };
+  },
+});
+
 export const createElection = mutation({
   args: {
     title: v.string(),

@@ -2,6 +2,8 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import { useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 import { useCurrentUser } from '@/shared/auth';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Award01Icon, ArrowRight01Icon, Shield01Icon, CheckmarkCircle01Icon } from '@hugeicons/core-free-icons';
@@ -9,6 +11,7 @@ import { Award01Icon, ArrowRight01Icon, Shield01Icon, CheckmarkCircle01Icon } fr
 export default function LandingPage() {
   const router = useRouter();
   const currentUser = useCurrentUser();
+  const publishedElection = useQuery(api.elections.getLatestPublishedElection);
   const navigateTo = (path: string) => router.push(path);
 
   return (
@@ -219,12 +222,14 @@ export default function LandingPage() {
                   className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
                 />
               </button>
-              <button
-                onClick={() => navigateTo('/dashboard')}
-                className="px-5 py-3.5 text-sm font-semibold text-muted-foreground border border-border rounded-xl hover:bg-muted transition-all"
-              >
-                View Results
-              </button>
+              {publishedElection && (
+                <button
+                  onClick={() => navigateTo(`/results/${publishedElection._id}`)}
+                  className="px-5 py-3.5 text-sm font-semibold text-muted-foreground border border-border rounded-xl hover:bg-muted transition-all"
+                >
+                  View Results
+                </button>
+              )}
             </div>
 
             <div className="flex items-center gap-5 rv rv5">

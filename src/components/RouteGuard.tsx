@@ -16,6 +16,10 @@ export default function RouteGuard({ children }: RouteGuardProps) {
   const router = useRouter();
 
   useEffect(() => {
+    if (authState.status === 'unauthenticated') {
+      router.push('/login');
+      return;
+    }
     if (authState.status !== 'authenticated') return;
     const { user } = authState;
 
@@ -29,6 +33,10 @@ export default function RouteGuard({ children }: RouteGuardProps) {
       router.push('/dashboard');
     }
   }, [authState, pathname, router]);
+
+  if (authState.status === 'unauthenticated') {
+    return null;
+  }
 
   if (authState.status === 'loading') {
     return (
