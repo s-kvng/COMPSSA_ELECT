@@ -15,15 +15,17 @@ export default function RouteGuard({ children }: RouteGuardProps) {
   const pathname = usePathname();
   const router = useRouter();
 
+  const isPublicRoute = pathname === '/login' || pathname === '/first-login' || pathname === '/';
+
   useEffect(() => {
     if (authState.status === 'unauthenticated') {
-      router.push('/login');
+      if (!isPublicRoute) router.push('/login');
       return;
     }
     if (authState.status !== 'authenticated') return;
     const { user } = authState;
 
-    if (pathname === '/login') {
+    if (pathname === '/login' || pathname === '/') {
       router.push('/dashboard');
       return;
     }
@@ -32,9 +34,9 @@ export default function RouteGuard({ children }: RouteGuardProps) {
     } else if (!user.isFirstLogin && pathname === '/first-login') {
       router.push('/dashboard');
     }
-  }, [authState, pathname, router]);
+  }, [authState, pathname, router, isPublicRoute]);
 
-  if (authState.status === 'unauthenticated') {
+  if (authState.status === 'unauthenticated' && !isPublicRoute) {
     return null;
   }
 
