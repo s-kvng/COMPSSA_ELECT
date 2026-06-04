@@ -65,7 +65,7 @@ export const getStudents = query({
   },
 });
 
-const markFirstLoginDone = internalMutation({
+export const markFirstLoginDone = internalMutation({
   args: { userId: v.id("users") },
   returns: v.null(),
   handler: async (ctx, { userId }): Promise<null> => {
