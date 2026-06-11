@@ -137,7 +137,7 @@ export default function LandingPage() {
               marginTop: -120,
             }}
           >
-            COMPSSA · Dept. of Computer Science
+            KTU COMPSSA · Dept. of Computer Science
           </div>
 
           {/* Bottom metadata */}
@@ -176,7 +176,7 @@ export default function LandingPage() {
               >
                 <HugeiconsIcon icon={Award01Icon} className="h-4 w-4 text-white" strokeWidth={2} />
               </div>
-              <span className="font-mono text-xs font-bold uppercase tracking-wider text-foreground">COMPSSA</span>
+              <span className="font-mono text-xs font-bold uppercase tracking-wider text-foreground">KTU COMPSSA</span>
             </div>
             <div className="hidden lg:block" />
 
@@ -194,7 +194,7 @@ export default function LandingPage() {
               className="font-mono text-[10px] uppercase tracking-[0.2em] font-bold rv rv2"
               style={{ color: 'var(--color-accent)' }}
             >
-              COMPSSA · 2026 General Elections
+              KTU COMPSSA · 2026 General Elections
             </p>
 
             <div className="space-y-4 rv rv3">
@@ -206,7 +206,7 @@ export default function LandingPage() {
                 <span style={{ color: 'var(--color-accent)' }}>Your Voice.</span>
               </h1>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                The official digital ballot platform for COMPSSA. Every vote is sealed, anonymised, and cryptographically verified by the Electoral Commission.
+                The official digital ballot platform for KTU COMPSSA. Every vote is sealed, anonymised, and cryptographically verified by the Electoral Commission.
               </p>
             </div>
 

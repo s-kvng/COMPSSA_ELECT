@@ -108,7 +108,7 @@ export default function LiveDashboardPage() {
 
   const handleExportCSV = () => {
     try {
-      let csv = `COMPSSA ELECTION SYSTEM AUDIT JOURNAL\n`;
+      let csv = `KTU COMPSSA ELECTION SYSTEM AUDIT JOURNAL\n`;
       csv += `Election Title,${election.title}\n`;
       csv += `Status,${election.status}\n`;
       csv += `Turnout Rate,${turnoutPercent}% (${uniqueVoters} of ${registeredCount})\n`;
@@ -133,7 +133,7 @@ export default function LiveDashboardPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `COMPSSA_Election_Audit_${electionId}.csv`;
+      a.download = `KTU_COMPSSA_Election_Audit_${electionId}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -396,7 +396,7 @@ export default function LiveDashboardPage() {
                 <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                   The official results for{' '}
                   <strong className="text-foreground">{election.title}</strong> will be made
-                  public to the entire COMPSSA department. This cannot be retracted.
+                  public to the entire KTU COMPSSA department. This cannot be retracted.
                 </p>
               </div>
             </div>

@@ -144,7 +144,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <HugeiconsIcon icon={Award01Icon} strokeWidth={2} className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold tracking-tight">COMPSSA</span>
+                  <span className="truncate font-semibold tracking-tight">KTU COMPSSA</span>
                   <span className="truncate text-xs text-sidebar-foreground/60 font-mono uppercase tracking-wider">
                     Election Platform
                   </span>

@@ -60,7 +60,7 @@ export default function ResultsPage() {
 
           <div className="text-center text-[10px] font-mono text-slate-400 py-4">
             <p>© 2026 Department of Computer Science • Ghana</p>
-            <p className="mt-1">COMPSSA Online Election System • Audit Ledger V1.0</p>
+            <p className="mt-1">KTU COMPSSA Online Election System • Audit Ledger V1.0</p>
           </div>
         </div>
       </div>
@@ -95,7 +95,7 @@ export default function ResultsPage() {
             <span className="text-[10px] font-mono text-purple-600 uppercase tracking-widest font-black">
               Official Certified Ballot Results
             </span>
-            <h2 className="font-sans font-extrabold text-2xl text-slate-900 mt-2">COMPSSA Elections</h2>
+            <h2 className="font-sans font-extrabold text-2xl text-slate-900 mt-2">KTU COMPSSA Elections</h2>
           </div>
         </div>
 
@@ -181,7 +181,7 @@ export default function ResultsPage() {
 
         <div className="text-center text-[10px] font-mono text-slate-400 py-6">
           <p>© 2026 Department of Computer Science • Ghana</p>
-          <p className="mt-1">COMPSSA Online Election System • Audit Ledger V1.0</p>
+          <p className="mt-1">KTU COMPSSA Online Election System • Audit Ledger V1.0</p>
         </div>
       </div>
     </div>

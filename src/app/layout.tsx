@@ -22,8 +22,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "COMPSSA Election Platform",
-  description: "Digital voting system for the COMPSSA department.",
+  title: "KTU COMPSSA Election Platform",
+  description: "Digital voting system for the KTU COMPSSA department.",
 };
 
 export default function RootLayout({
