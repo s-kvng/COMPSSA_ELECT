@@ -6,34 +6,42 @@ export const castVote = mutation({
   args: {
     electionId: v.id("elections"),
     categoryId: v.id("categories"),
-    candidateId: v.id("candidates"),
+    candidateId: v.optional(v.id("candidates")),
+    noVote: v.optional(v.boolean()),
   },
   returns: v.object({ status: v.literal("success") }),
   handler: async (ctx, args) => {
-    // 1. Verify authenticated, authorized role, and first login complete
     const user = await assertStudentVoter(ctx);
     if (user.isFirstLogin) throw new ConvexError("Must change password before voting");
 
-    // 2. Assert election is active and within time window
     const election = await ctx.db.get(args.electionId);
     if (!election) throw new ConvexError("Election not found");
     if (election.status !== "active") throw new ConvexError("Election is not active");
     if (Date.now() >= election.endTime) throw new ConvexError("Election has ended");
 
-    // 3. Verify referential consistency: category → election, candidate → category + election
     const category = await ctx.db.get(args.categoryId);
     if (!category || category.electionId !== args.electionId)
       throw new ConvexError("Category does not belong to this election");
 
-    const candidate = await ctx.db.get(args.candidateId);
-    if (
-      !candidate ||
-      candidate.categoryId !== args.categoryId ||
-      candidate.electionId !== args.electionId
-    )
-      throw new ConvexError("Candidate does not belong to this category or election");
+    if (args.noVote) {
+      // No-vote path: just verify the category is a single-candidate category
+      const candidateCount = await ctx.db
+        .query("candidates")
+        .withIndex("by_category", (q) => q.eq("categoryId", args.categoryId))
+        .take(2);
+      if (candidateCount.length !== 1)
+        throw new ConvexError("No-vote is only allowed for single-candidate categories");
+    } else {
+      if (!args.candidateId) throw new ConvexError("candidateId is required for a yes vote");
+      const candidate = await ctx.db.get(args.candidateId);
+      if (
+        !candidate ||
+        candidate.categoryId !== args.categoryId ||
+        candidate.electionId !== args.electionId
+      )
+        throw new ConvexError("Candidate does not belong to this category or election");
+    }
 
-    // 4. Check for duplicate vote in this category
     const existingVote = await ctx.db
       .query("voted_log")
       .withIndex("by_voter_category", (q) =>
@@ -42,12 +50,11 @@ export const castVote = mutation({
       .unique();
     if (existingVote) throw new ConvexError("Already voted in this category");
 
-    // 5. Record vote (append-only; tally is derived from this log)
     await ctx.db.insert("voted_log", {
       electionId: args.electionId,
       studentId: user._id,
       categoryId: args.categoryId,
-      candidateId: args.candidateId,
+      ...(args.noVote ? { noVote: true } : { candidateId: args.candidateId }),
       timestamp: Date.now(),
     });
 
@@ -60,7 +67,8 @@ export const getMyVotes = query({
   returns: v.array(
     v.object({
       categoryId: v.id("categories"),
-      candidateId: v.id("candidates"),
+      candidateId: v.optional(v.id("candidates")),
+      noVote: v.optional(v.boolean()),
     }),
   ),
   handler: async (ctx, args) => {
@@ -74,6 +82,7 @@ export const getMyVotes = query({
     return votes.map((row) => ({
       categoryId: row.categoryId,
       candidateId: row.candidateId,
+      noVote: row.noVote,
     }));
   },
 });

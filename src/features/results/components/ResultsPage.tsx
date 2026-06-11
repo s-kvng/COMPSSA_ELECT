@@ -114,6 +114,56 @@ export default function ResultsPage() {
         {/* Position tables */}
         <div className="space-y-5 select-text">
           {categories.map((cat) => {
+            const isSingleCandidate = cat.candidates.length === 1 && cat.noVoteCount !== undefined;
+
+            if (isSingleCandidate) {
+              const cand = cat.candidates[0];
+              const yesCount = cand.count;
+              const noCount = cat.noVoteCount ?? 0;
+              const total = yesCount + noCount;
+              const yesPct = total > 0 ? Math.round((yesCount / total) * 100) : 0;
+              const noPct = total > 0 ? Math.round((noCount / total) * 100) : 0;
+
+              return (
+                <div key={cat._id} className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-3xs space-y-4">
+                  <div className="pb-3 border-b border-slate-100">
+                    <h3 className="font-sans font-bold text-sm text-slate-900 leading-none">{cat.name}</h3>
+                    <p className="text-[10px] text-slate-400 font-mono mt-2">
+                      Certified total category ballots: {total}
+                    </p>
+                    <p className="text-[10px] font-mono text-slate-500 mt-0.5">Candidate: {cand.userName}</p>
+                  </div>
+
+                  <div className="space-y-3">
+                    {/* Yes row */}
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-xs items-center">
+                        <span className="font-bold text-emerald-700">Yes</span>
+                        <span className="font-mono text-slate-500">
+                          <strong className="text-slate-800">{yesCount}</strong> ballots ({yesPct}%)
+                        </span>
+                      </div>
+                      <div className="h-3.5 w-full bg-slate-100 rounded-md overflow-hidden border border-slate-50">
+                        <div className="h-full rounded-md bg-emerald-500 transition-all duration-300" style={{ width: `${yesPct || 1}%` }} />
+                      </div>
+                    </div>
+                    {/* No row */}
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-xs items-center">
+                        <span className="font-bold text-red-600">No</span>
+                        <span className="font-mono text-slate-500">
+                          <strong className="text-slate-800">{noCount}</strong> ballots ({noPct}%)
+                        </span>
+                      </div>
+                      <div className="h-3.5 w-full bg-slate-100 rounded-md overflow-hidden border border-slate-50">
+                        <div className="h-full rounded-md bg-red-400 transition-all duration-300" style={{ width: `${noPct || 1}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
             const sorted = [...cat.candidates].sort((a, b) => b.count - a.count);
             const totalVotes = cat.candidates.reduce((acc, c) => acc + c.count, 0);
             const topCount = sorted[0]?.count ?? 0;
