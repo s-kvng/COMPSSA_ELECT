@@ -5,13 +5,16 @@ export async function sendSms(apiKey: string, phone: string, message: string) {
     body: JSON.stringify({ sender: "AIMSNetwork", message, recipients: [phone] }),
   });
   const body = await response.json();
-  if (!response.ok) console.error("Arkesel SMS error:", body);
-  else console.log("SMS sent:", body);
+  if (!response.ok) {
+    console.error("Arkesel SMS error:", body);
+    throw new Error(`SMS delivery failed (${response.status}): ${JSON.stringify(body)}`);
+  }
+  console.log("SMS sent:", body);
 }
 
 export function passwordSmsMessage(firstName: string, email: string, password: string): string {
   return (
-    `Hi ${firstName}, your COMPSSA Election Portal account is ready. Visit https://ktucompssa-elect.vercel.app \n` +
+    `Hi ${firstName}, your KTU COMPSSA Election Portal account is ready. Visit https://ktucompssa-elect.vercel.app \n` +
     `Email: ${email}\n` +
     `Password: ${password}\n` +
     `Login and change your password after first sign-in.`
