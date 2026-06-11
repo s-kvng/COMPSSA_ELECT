@@ -32,6 +32,7 @@ export default function ElectionDetailPage() {
   const removeCategory = useMutation(api.categories.removeCategory);
   const addCandidate = useMutation(api.candidates.addCandidate);
   const removeCandidate = useMutation(api.candidates.removeCandidate);
+  const generateUploadUrl = useMutation(api.candidates.generateUploadUrl);
   const markReady = useMutation(api.elections.markReady);
   const earlyClose = useMutation(api.ec_actions.earlyClose);
 
@@ -41,6 +42,8 @@ export default function ElectionDetailPage() {
   const [showAddCategoryForm, setShowAddCategoryForm] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState('');
   const [candidateBio, setCandidateBio] = useState('');
+  const [candidatePhoto, setCandidatePhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [actionError, setActionError] = useState('');
@@ -83,14 +86,29 @@ export default function ElectionDetailPage() {
     e.preventDefault();
     if (!selectedUserId) return;
     try {
+      let photoStorageId: Id<'_storage'> | undefined;
+      if (candidatePhoto) {
+        const uploadUrl = await generateUploadUrl();
+        const res = await fetch(uploadUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': candidatePhoto.type },
+          body: candidatePhoto,
+        });
+        if (!res.ok) throw new Error(`Photo upload failed (${res.status})`);
+        const { storageId } = await res.json() as { storageId: Id<'_storage'> };
+        photoStorageId = storageId;
+      }
       await addCandidate({
         electionId,
         categoryId: categoryId as Id<'categories'>,
         userId: selectedUserId as Id<'users'>,
         bio: candidateBio || undefined,
+        photoStorageId,
       });
       setSelectedUserId('');
       setCandidateBio('');
+      setCandidatePhoto(null);
+      setPhotoPreview(null);
       setExpandedCategoryId(null);
     } catch (err: unknown) {
       setActionError(err instanceof Error ? err.message : 'Failed to add candidate.');
@@ -330,8 +348,38 @@ export default function ElectionDetailPage() {
                             placeholder="Goals, platforms, or manifesto..."
                             className="block w-full px-3 py-2 text-xs border border-border bg-card rounded-lg focus:border-primary outline-none resize-none font-sans"
                           />
+                          <div>
+                            <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">
+                              Candidate Photo <span className="font-normal">(optional)</span>
+                            </label>
+                            <div className="flex items-center gap-3">
+                              {photoPreview && (
+                                <img
+                                  src={photoPreview}
+                                  alt="Preview"
+                                  className="h-12 w-12 rounded-xl object-cover border border-border shrink-0"
+                                />
+                              )}
+                              <label className="flex-1 cursor-pointer px-3 py-2 border border-dashed border-border hover:border-primary/50 bg-muted/30 hover:bg-primary/4 rounded-lg text-xs text-muted-foreground hover:text-primary transition-all text-center">
+                                {candidatePhoto ? candidatePhoto.name : 'Click to upload image'}
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0] ?? null;
+                                    setCandidatePhoto(file);
+                                    setPhotoPreview((prev) => {
+                                      if (prev) URL.revokeObjectURL(prev);
+                                      return file ? URL.createObjectURL(file) : null;
+                                    });
+                                  }}
+                                />
+                              </label>
+                            </div>
+                          </div>
                           <div className="flex justify-end gap-2">
-                            <button type="button" onClick={() => setExpandedCategoryId(null)} className="px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted border border-border rounded-lg">Cancel</button>
+                            <button type="button" onClick={() => { setExpandedCategoryId(null); setCandidatePhoto(null); setPhotoPreview(null); }} className="px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted border border-border rounded-lg">Cancel</button>
                             <button type="submit" disabled={!selectedUserId} className="px-4 py-1.5 text-xs font-semibold text-primary-foreground bg-primary hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground rounded-lg">Enlist Candidate</button>
                           </div>
                         </form>

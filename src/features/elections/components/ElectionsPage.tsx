@@ -146,7 +146,7 @@ export default function ElectionsPage() {
                   required
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. COMPSSA General Elections 2026"
+                  placeholder="e.g. KTU COMPSSA General Elections 2026"
                   className="block w-full px-3 py-2 text-xs border border-border bg-input rounded-lg focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none font-sans"
                 />
               </div>

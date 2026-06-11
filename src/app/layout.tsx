@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -21,9 +21,13 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  maximumScale: 1,
+};
+
 export const metadata: Metadata = {
-  title: "COMPSSA Election Platform",
-  description: "Digital voting system for the COMPSSA department.",
+  title: "KTU COMPSSA Election Platform",
+  description: "Digital voting system for the KTU COMPSSA department.",
 };
 
 export default function RootLayout({

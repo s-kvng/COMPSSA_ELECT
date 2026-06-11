@@ -94,7 +94,7 @@ export default function CandidateTallyPage() {
           </div>
 
           <p className="text-[11px] text-slate-400 max-w-sm mx-auto leading-relaxed">
-            Your live vote count updates automatically as voters submit their ballots in the COMPSSA system.
+            Your live vote count updates automatically as voters submit their ballots in the KTU COMPSSA system.
           </p>
 
           <div className="border-t border-slate-800 pt-4 flex items-center justify-center gap-2 text-[10px] font-mono text-slate-400">
@@ -111,7 +111,7 @@ export default function CandidateTallyPage() {
               <HugeiconsIcon icon={CheckmarkSquare01Icon} className="h-4.5 w-4.5 text-blue-600" />
               <span>Have you cast your own ballot?</span>
             </h4>
-            <p className="text-xs text-slate-500">You are eligible to vote for other positions in COMPSSA categories.</p>
+            <p className="text-xs text-slate-500">You are eligible to vote for other positions in KTU COMPSSA categories.</p>
           </div>
           <button
             onClick={() => router.push('/vote')}

@@ -46,7 +46,7 @@ export default function LoginForm() {
           Sign in to your account
         </h2>
         <p className="mt-2 text-center text-xs text-slate-500">
-          Enter your COMPSSA student or administrative credentials to enter the booth.
+          Enter your KTU COMPSSA student or administrative credentials to enter the booth.
         </p>
       </div>
 

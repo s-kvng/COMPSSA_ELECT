@@ -107,7 +107,7 @@ export default function DashboardPage() {
         <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
           <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
             <div className="space-y-1">
-              <span className="text-[10px] font-mono uppercase bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded-md">COMPSSA General Election</span>
+              <span className="text-[10px] font-mono uppercase bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded-md">KTU COMPSSA General Election</span>
               <h3 className="font-display font-bold text-base text-slate-800 mt-1">{currentElection.title}</h3>
             </div>
             <StatusBadge status={currentElection.status} />
@@ -145,7 +145,7 @@ export default function DashboardPage() {
                         {hasFinishedVoting ? (
                           <div className="bg-green-50 border border-green-100 text-green-700 p-3 rounded-lg text-xs flex gap-2 items-center">
                             <HugeiconsIcon icon={CheckmarkCircle01Icon} className="h-4.5 w-4.5 text-green-600" />
-                            <span>All of your COMPSSA election ballots have been securely sealed.</span>
+                            <span>All of your KTU COMPSSA election ballots have been securely sealed.</span>
                           </div>
                         ) : (
                           <button

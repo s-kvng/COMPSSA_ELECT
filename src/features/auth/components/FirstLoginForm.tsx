@@ -75,8 +75,8 @@ export default function FirstLoginForm() {
                 type="text"
                 id="temp-password"
                 disabled
-                className="mt-1.5 block w-full px-3 py-2 text-xs border border-slate-200 bg-slate-50 rounded-md text-slate-500 outline-none cursor-not-allowed select-none font-mono"
-                value={`COMPSSA_${currentUser.studentId.replace(/[^a-zA-Z0-9]/g, '')}`}
+                className="mt-1.5 block w-full px-3 py-2 text-xs border border-slate-200 bg-slate-50 rounded-md text-slate-500 outline-none cursor-not-allowed select-none font-mono tracking-widest"
+                value="••••••••"
               />
             </div>
 

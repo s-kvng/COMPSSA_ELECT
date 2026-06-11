@@ -60,7 +60,7 @@ export default function ResultsPage() {
 
           <div className="text-center text-[10px] font-mono text-slate-400 py-4">
             <p>© 2026 Department of Computer Science • Ghana</p>
-            <p className="mt-1">COMPSSA Online Election System • Audit Ledger V1.0</p>
+            <p className="mt-1">KTU COMPSSA Online Election System • Audit Ledger V1.0</p>
           </div>
         </div>
       </div>
@@ -95,7 +95,7 @@ export default function ResultsPage() {
             <span className="text-[10px] font-mono text-purple-600 uppercase tracking-widest font-black">
               Official Certified Ballot Results
             </span>
-            <h2 className="font-sans font-extrabold text-2xl text-slate-900 mt-2">COMPSSA Elections</h2>
+            <h2 className="font-sans font-extrabold text-2xl text-slate-900 mt-2">KTU COMPSSA Elections</h2>
           </div>
         </div>
 
@@ -116,6 +116,8 @@ export default function ResultsPage() {
           {categories.map((cat) => {
             const sorted = [...cat.candidates].sort((a, b) => b.count - a.count);
             const totalVotes = cat.candidates.reduce((acc, c) => acc + c.count, 0);
+            const topCount = sorted[0]?.count ?? 0;
+            const isCategoryTied = topCount > 0 && sorted.filter(c => c.count === topCount).length > 1;
 
             return (
               <div key={cat._id} className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-3xs space-y-4">
@@ -124,25 +126,36 @@ export default function ResultsPage() {
                   <p className="text-[10px] text-slate-400 font-mono mt-2">
                     Certified total category ballots: {totalVotes}
                   </p>
+                  {isCategoryTied && (
+                    <p className="text-[10px] font-mono font-bold text-red-600 mt-1 uppercase tracking-wide">
+                      ⚠ Tied — Re-election required for this position
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-4">
                   {sorted.map((cand, idx) => {
                     const pct = totalVotes > 0 ? Math.round((cand.count / totalVotes) * 100) : 0;
-                    const isWinner = idx === 0 && cand.count > 0;
+                    const isTied = isCategoryTied && cand.count === topCount;
+                    const isWinner = !isCategoryTied && idx === 0 && cand.count > 0;
 
                     return (
                       <div key={cand._id} className="space-y-1.5">
                         <div className="flex justify-between text-xs items-center">
                           <div className="flex items-center gap-1.5">
                             <span className="font-mono font-bold text-slate-400">{idx + 1}.</span>
-                            <span className={`font-semibold ${isWinner ? 'text-slate-900 font-bold' : 'text-slate-600'}`}>
+                            <span className={`font-semibold ${isWinner || isTied ? 'text-slate-900 font-bold' : 'text-slate-600'}`}>
                               {cand.userName}
                             </span>
                             {isWinner && (
                               <span className="inline-flex items-center gap-0.5 px-2 py-0.5 text-[9px] font-extrabold text-amber-700 bg-amber-50 border border-amber-200 rounded-full font-mono uppercase leading-none">
                                 <HugeiconsIcon icon={SparklesIcon} className="h-2.5 w-2.5" />
                                 Winner
+                              </span>
+                            )}
+                            {isTied && (
+                              <span className="inline-flex items-center gap-0.5 px-2 py-0.5 text-[9px] font-extrabold text-red-700 bg-red-50 border border-red-200 rounded-full font-mono uppercase leading-none">
+                                Tied
                               </span>
                             )}
                           </div>
@@ -153,7 +166,7 @@ export default function ResultsPage() {
 
                         <div className="h-3.5 w-full bg-slate-100 rounded-md overflow-hidden border border-slate-50">
                           <div
-                            className={`h-full rounded-md transition-all duration-300 ${isWinner ? 'bg-amber-500' : 'bg-blue-600'}`}
+                            className={`h-full rounded-md transition-all duration-300 ${isWinner ? 'bg-amber-500' : isTied ? 'bg-red-400' : 'bg-blue-600'}`}
                             style={{ width: `${pct || 1}%` }}
                           />
                         </div>
@@ -168,7 +181,7 @@ export default function ResultsPage() {
 
         <div className="text-center text-[10px] font-mono text-slate-400 py-6">
           <p>© 2026 Department of Computer Science • Ghana</p>
-          <p className="mt-1">COMPSSA Online Election System • Audit Ledger V1.0</p>
+          <p className="mt-1">KTU COMPSSA Online Election System • Audit Ledger V1.0</p>
         </div>
       </div>
     </div>

@@ -9,6 +9,9 @@ export const userRoleValidator = v.union(
   v.literal("hod"),
 );
 
+export const sexValidator = v.union(v.literal("M"), v.literal("F"));
+export const studentTypeValidator = v.union(v.literal("regular"), v.literal("weekend"));
+
 export const electionStatusValidator = v.union(
   v.literal("draft"),
   v.literal("ready"),
@@ -26,6 +29,11 @@ export default defineSchema({
     studentId: v.string(),
     role: userRoleValidator,
     isFirstLogin: v.boolean(),
+    phone: v.optional(v.string()),
+    level: v.optional(v.number()),
+    sex: v.optional(sexValidator),
+    regular: v.optional(studentTypeValidator),
+    programme: v.optional(v.string()),
   })
     .index("by_email", ["email"])
     .index("by_student_id", ["studentId"])
@@ -56,6 +64,7 @@ export default defineSchema({
   })
     .index("by_election", ["electionId"])
     .index("by_category", ["categoryId"])
+    .index("by_user", ["userId"])
     .index("by_user_election", ["userId", "electionId"]),
 
   voted_log: defineTable({

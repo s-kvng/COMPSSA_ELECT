@@ -11,7 +11,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-1 data-[orientation=vertical]:h-4" />
           <span className="text-xs font-mono font-semibold text-sidebar-foreground/50 uppercase tracking-wider select-none">
-            COMPSSA Elections
+            KTU COMPSSA Elections
           </span>
         </header>
         <main className="flex flex-1 flex-col">

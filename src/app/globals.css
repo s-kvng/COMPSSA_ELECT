@@ -56,7 +56,7 @@
   --tracking-normal: 0em;
   --spacing: 0.25rem;
 
-  /* COMPSSA component aliases — mapped to semantic tokens */
+  /* KTU COMPSSA component aliases — mapped to semantic tokens */
   --color-accent: var(--primary);
   --color-primary: var(--secondary);
   --color-success: oklch(0.7322 0.1767 160.0);

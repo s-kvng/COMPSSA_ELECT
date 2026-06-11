@@ -122,6 +122,7 @@ export const getCurrentElection = query({
               userId: v.id("users"),
               userName: v.string(),
               bio: v.optional(v.string()),
+              photoUrl: v.union(v.string(), v.null()),
             }),
           ),
         }),
@@ -166,11 +167,15 @@ export const getCurrentElection = query({
         const candidates = await Promise.all(
           candidateDocs.map(async (c) => {
             const candUser = await ctx.db.get(c.userId);
+            const photoUrl = c.photoStorageId
+              ? await ctx.storage.getUrl(c.photoStorageId)
+              : null;
             return {
               _id: c._id,
               userId: c.userId,
               userName: candUser?.name ?? "Unknown",
               bio: c.bio,
+              photoUrl,
             };
           }),
         );
@@ -222,6 +227,7 @@ export const getElection = query({
               userId: v.id("users"),
               userName: v.string(),
               bio: v.optional(v.string()),
+              photoUrl: v.union(v.string(), v.null()),
             }),
           ),
         }),
@@ -254,11 +260,15 @@ export const getElection = query({
         const candidates = await Promise.all(
           candidateDocs.map(async (c) => {
             const candUser = await ctx.db.get(c.userId);
+            const photoUrl = c.photoStorageId
+              ? await ctx.storage.getUrl(c.photoStorageId)
+              : null;
             return {
               _id: c._id,
               userId: c.userId,
               userName: candUser?.name ?? "Unknown",
               bio: c.bio,
+              photoUrl,
             };
           }),
         );
