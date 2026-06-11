@@ -14,6 +14,7 @@ export const electionResults = query({
         v.object({
           _id: v.id("categories"),
           name: v.string(),
+          noVoteCount: v.optional(v.number()),
           candidates: v.array(
             v.object({
               _id: v.id("candidates"),
@@ -62,7 +63,7 @@ export const electionResults = query({
               ctx.db
                 .query("voted_log")
                 .withIndex("by_candidate", (q) => q.eq("candidateId", c._id))
-                .collect(),
+                .take(10000),
             ]);
             return {
               _id: c._id,
@@ -73,7 +74,19 @@ export const electionResults = query({
           }),
         );
 
-        return { _id: category._id, name: category.name, candidates };
+        // For single-candidate categories, also count no-votes
+        let noVoteCount: number | undefined;
+        if (candidateDocs.length === 1) {
+          const noVotes = await ctx.db
+            .query("voted_log")
+            .withIndex("by_categoryId_and_noVote", (q) =>
+              q.eq("categoryId", category._id).eq("noVote", true),
+            )
+            .take(10000);
+          noVoteCount = noVotes.length;
+        }
+
+        return { _id: category._id, name: category.name, noVoteCount, candidates };
       }),
     );
 
@@ -90,7 +103,6 @@ export const myVoteCount = query({
     const user = await ctx.db.get(userId);
     if (!user || user.role !== "candidate") return null;
 
-    // Find the active election
     const activeElections = await ctx.db
       .query("elections")
       .withIndex("by_status", (q) => q.eq("status", "active"))
@@ -109,7 +121,7 @@ export const myVoteCount = query({
     const votes = await ctx.db
       .query("voted_log")
       .withIndex("by_candidate", (q) => q.eq("candidateId", candidateEntry._id))
-      .collect();
+      .take(10000);
     return votes.length;
   },
 });

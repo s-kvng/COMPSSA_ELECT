@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { useQuery, useMutation } from 'convex/react';
 import { useParams, useRouter } from 'next/navigation';
 import { useIsMounted } from '@/hooks/useIsMounted';
@@ -47,6 +48,7 @@ export default function VoteCategoryPage() {
   const castVote = useMutation(api.votes.castVote);
 
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
+  const [isNoVote, setIsNoVote] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [voteError, setVoteError] = useState('');
@@ -86,15 +88,24 @@ export default function VoteCategoryPage() {
   const hasVoted = !!myVoteForCategory;
 
   const handleConfirmVote = async () => {
-    if (!selectedCandidateId || !currentElection._id) return;
+    if (!currentElection._id) return;
+    if (!isNoVote && !selectedCandidateId) return;
     setIsSubmitting(true);
     setVoteError('');
     try {
-      await castVote({
-        electionId: currentElection._id,
-        categoryId: categoryId as Parameters<typeof castVote>[0]['categoryId'],
-        candidateId: selectedCandidateId as Parameters<typeof castVote>[0]['candidateId'],
-      });
+      await castVote(
+        isNoVote
+          ? {
+              electionId: currentElection._id,
+              categoryId: categoryId as Parameters<typeof castVote>[0]['categoryId'],
+              noVote: true,
+            }
+          : {
+              electionId: currentElection._id,
+              categoryId: categoryId as Parameters<typeof castVote>[0]['categoryId'],
+              candidateId: selectedCandidateId as Parameters<typeof castVote>[0]['candidateId'],
+            },
+      );
       setShowConfirmModal(false);
       router.push('/vote');
     } catch (err: unknown) {
@@ -145,7 +156,7 @@ export default function VoteCategoryPage() {
         </div>
       )}
 
-      {/* Candidate grid */}
+      {/* Candidate grid or Yes/No view */}
       <div>
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
           {category.candidates.length} Candidate{category.candidates.length !== 1 ? 's' : ''} Running
@@ -153,7 +164,67 @@ export default function VoteCategoryPage() {
 
         {category.candidates.length === 0 ? (
           <p className="text-sm text-muted-foreground">No candidates registered in this category.</p>
+        ) : category.candidates.length === 1 ? (
+          /* ── Single-candidate: Yes / No ── */
+          (() => {
+            const cand = category.candidates[0];
+            const color = getAvatarColor(cand.userName);
+            const votedYes = hasVoted && myVoteForCategory?.candidateId === cand._id;
+            const votedNo = hasVoted && myVoteForCategory?.noVote === true;
+
+            return (
+              <div className="space-y-4 max-w-sm">
+                {/* Candidate card (display only) */}
+                <div className="rounded-2xl border border-border bg-card overflow-hidden flex flex-col shadow-sm">
+                  <div className="relative w-full aspect-4/3 overflow-hidden bg-muted">
+                    {cand.photoUrl ? (
+                      <Image src={cand.photoUrl} alt={cand.userName} fill sizes="(max-width: 640px) 100vw, 384px" loading="eager" className="object-contain" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: color.bg }}>
+                        <span className="font-bold text-4xl tracking-tight" style={{ color: color.text }}>
+                          {getInitials(cand.userName)}
+                        </span>
+                      </div>
+                    )}
+                    {votedYes && (
+                      <div className="absolute bottom-0 inset-x-0 bg-[#10b981] py-1 text-center">
+                        <span className="text-[10px] font-mono font-bold text-white uppercase tracking-wider">Voted Yes</span>
+                      </div>
+                    )}
+                    {votedNo && (
+                      <div className="absolute bottom-0 inset-x-0 bg-red-500 py-1 text-center">
+                        <span className="text-[10px] font-mono font-bold text-white uppercase tracking-wider">Voted No</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <h4 className="font-sans font-bold text-sm text-foreground">{cand.userName}</h4>
+                    {cand.bio && <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{cand.bio}</p>}
+                  </div>
+                </div>
+
+                {/* Yes / No buttons */}
+                {!hasVoted && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => { setSelectedCandidateId(cand._id); setIsNoVote(false); setShowConfirmModal(true); }}
+                      className="py-3 rounded-xl text-sm font-bold bg-[#10b981] text-white hover:bg-[#059669] transition-all shadow-sm"
+                    >
+                      Yes
+                    </button>
+                    <button
+                      onClick={() => { setSelectedCandidateId(cand._id); setIsNoVote(true); setShowConfirmModal(true); }}
+                      className="py-3 rounded-xl text-sm font-bold bg-red-500 text-white hover:bg-red-600 transition-all shadow-sm"
+                    >
+                      No
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })()
         ) : (
+          /* ── Multi-candidate grid ── */
           <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
             {category.candidates.map((cand) => {
               const initials = getInitials(cand.userName);
@@ -177,18 +248,11 @@ export default function VoteCategoryPage() {
                       : 'border-border bg-card hover:border-primary/40 hover:shadow-sm cursor-pointer',
                   ].join(' ')}
                 >
-                  <div className="relative w-full aspect-[4/3] overflow-hidden bg-muted">
+                  <div className="relative w-full aspect-4/3 overflow-hidden bg-muted">
                     {cand.photoUrl ? (
-                      <img
-                        src={cand.photoUrl}
-                        alt={cand.userName}
-                        className="w-full h-full object-cover"
-                      />
+                      <Image src={cand.photoUrl} alt={cand.userName} fill sizes="(max-width: 1024px) 50vw, 33vw" className="object-contain" />
                     ) : (
-                      <div
-                        className="w-full h-full flex items-center justify-center"
-                        style={{ backgroundColor: color.bg }}
-                      >
+                      <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: color.bg }}>
                         <span className="font-bold text-3xl sm:text-4xl tracking-tight" style={{ color: color.text }}>
                           {initials}
                         </span>
@@ -229,7 +293,7 @@ export default function VoteCategoryPage() {
         )}
       </div>
 
-      {!hasVoted && category.candidates.length > 0 && (
+      {!hasVoted && category.candidates.length > 1 && (
         <div className="sticky bottom-4 pt-4">
           <div className="bg-card border border-border rounded-2xl p-3 flex items-center justify-between gap-3 shadow-md">
             <p className="text-xs text-muted-foreground">
@@ -249,17 +313,19 @@ export default function VoteCategoryPage() {
       )}
 
       {showConfirmModal && selectedCandidate && isMounted && createPortal(
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 z-[200] animate-fade-in">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 z-200 animate-fade-in">
           <div className="bg-card border border-border rounded-2xl w-full max-w-sm p-6 space-y-5 shadow-2xl">
             <div>
-              <h3 className="font-sans font-bold text-base text-foreground">Confirm your vote</h3>
+              <h3 className="font-sans font-bold text-base text-foreground">
+                {isNoVote ? 'Confirm No vote' : 'Confirm your vote'}
+              </h3>
               <p className="text-xs text-muted-foreground mt-1">This action is permanent and cannot be undone.</p>
             </div>
 
             <div className="flex items-center gap-4 bg-muted/40 border border-border p-4 rounded-xl">
-              <div className="h-12 w-12 rounded-xl overflow-hidden shrink-0">
+              <div className="relative h-12 w-12 rounded-xl overflow-hidden shrink-0">
                 {selectedCandidate.photoUrl ? (
-                  <img src={selectedCandidate.photoUrl} alt={selectedCandidate.userName} className="w-full h-full object-cover" />
+                  <Image src={selectedCandidate.photoUrl} alt={selectedCandidate.userName} fill sizes="48px" className="object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: getAvatarColor(selectedCandidate.userName).bg }}>
                     <span className="font-bold text-sm" style={{ color: getAvatarColor(selectedCandidate.userName).text }}>
@@ -270,7 +336,11 @@ export default function VoteCategoryPage() {
               </div>
               <div className="min-w-0">
                 <p className="font-semibold text-sm text-foreground">{selectedCandidate.userName}</p>
-                <p className="text-xs text-muted-foreground mt-0.5 truncate">{category.name}</p>
+                <p className="text-xs mt-0.5 truncate">
+                  {isNoVote
+                    ? <span className="text-red-600 font-semibold">Voting No · {category.name}</span>
+                    : <span className="text-muted-foreground">{category.name}</span>}
+                </p>
               </div>
             </div>
 
@@ -287,11 +357,11 @@ export default function VoteCategoryPage() {
               <button
                 disabled={isSubmitting}
                 onClick={handleConfirmVote}
-                className="flex-1 px-4 py-2.5 text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary/90 rounded-xl transition-all flex items-center justify-center gap-2"
+                className={['flex-1 px-4 py-2.5 text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-2', isNoVote ? 'bg-red-500 hover:bg-red-600 text-white' : 'text-primary-foreground bg-primary hover:bg-primary/90'].join(' ')}
               >
                 {isSubmitting ? (
                   <><HugeiconsIcon icon={LoaderPinwheelIcon} className="h-4 w-4 animate-spin" /> Sealing…</>
-                ) : 'Cast Vote'}
+                ) : isNoVote ? 'Vote No' : 'Cast Vote'}
               </button>
             </div>
           </div>

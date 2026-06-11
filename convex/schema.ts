@@ -71,13 +71,15 @@ export default defineSchema({
     electionId: v.id("elections"),
     studentId: v.id("users"),
     categoryId: v.id("categories"),
-    candidateId: v.id("candidates"),
+    candidateId: v.optional(v.id("candidates")),
+    noVote: v.optional(v.boolean()),
     timestamp: v.number(),
   })
     .index("by_voter_category", ["studentId", "categoryId"])
     .index("by_voter_election", ["studentId", "electionId"])
     .index("by_election", ["electionId"])
-    .index("by_candidate", ["candidateId"]),
+    .index("by_candidate", ["candidateId"])
+    .index("by_categoryId_and_noVote", ["categoryId", "noVote"]),
 
   ec_action_log: defineTable({
     electionId: v.id("elections"),
