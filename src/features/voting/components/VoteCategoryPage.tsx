@@ -178,14 +178,22 @@ export default function VoteCategoryPage() {
                   ].join(' ')}
                 >
                   <div className="relative w-full aspect-[4/3] overflow-hidden bg-muted">
-                    <div
-                      className="w-full h-full flex items-center justify-center"
-                      style={{ backgroundColor: color.bg }}
-                    >
-                      <span className="font-bold text-3xl sm:text-4xl tracking-tight" style={{ color: color.text }}>
-                        {initials}
-                      </span>
-                    </div>
+                    {cand.photoUrl ? (
+                      <img
+                        src={cand.photoUrl}
+                        alt={cand.userName}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div
+                        className="w-full h-full flex items-center justify-center"
+                        style={{ backgroundColor: color.bg }}
+                      >
+                        <span className="font-bold text-3xl sm:text-4xl tracking-tight" style={{ color: color.text }}>
+                          {initials}
+                        </span>
+                      </div>
+                    )}
 
                     {isActive && (
                       <div className={['absolute top-2 right-2 h-7 w-7 rounded-full flex items-center justify-center shadow-md', isVotedChoice ? 'bg-[#10b981]' : 'bg-primary'].join(' ')}>
@@ -249,10 +257,16 @@ export default function VoteCategoryPage() {
             </div>
 
             <div className="flex items-center gap-4 bg-muted/40 border border-border p-4 rounded-xl">
-              <div className="h-12 w-12 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: getAvatarColor(selectedCandidate.userName).bg }}>
-                <span className="font-bold text-sm" style={{ color: getAvatarColor(selectedCandidate.userName).text }}>
-                  {getInitials(selectedCandidate.userName)}
-                </span>
+              <div className="h-12 w-12 rounded-xl overflow-hidden shrink-0">
+                {selectedCandidate.photoUrl ? (
+                  <img src={selectedCandidate.photoUrl} alt={selectedCandidate.userName} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: getAvatarColor(selectedCandidate.userName).bg }}>
+                    <span className="font-bold text-sm" style={{ color: getAvatarColor(selectedCandidate.userName).text }}>
+                      {getInitials(selectedCandidate.userName)}
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="min-w-0">
                 <p className="font-semibold text-sm text-foreground">{selectedCandidate.userName}</p>

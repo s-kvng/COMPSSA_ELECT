@@ -752,4 +752,12 @@ export const level200Students: StudentData[] = [
   { name: "OBED, FRIMPONG AGYENA", email: "FrimpongB208240007@ktu.edu.gh", studentId: "B208240007", phone: "+233554249732", level: 200, sex: "M", regular: "regular", programme: "BTech Artificial Intelligence and Robotics" },
   { name: "BLESS, NARTEY  YAW", email: "NarteyB208240008@ktu.edu.gh", studentId: "B208240008", phone: "+233546786967", level: 200, sex: "M", regular: "regular", programme: "BTech Artificial Intelligence and Robotics" },
   { name: "ANKRAH , NOAH", email: "NoahB208240009@ktu.edu.gh", studentId: "B208240009", phone: "+233534257871", level: 200, sex: "M", regular: "regular", programme: "BTech Artificial Intelligence and Robotics" },
+  { name: "AGBUGBLAH, ERNEST BUENATEY", email: "Ernest0420232755D@ktu.edu.gh", studentId: "04/2023/2755D", phone: "+233551811011", level: 200, sex: "M", regular: "weekend", programme: "HND Computer Network Mgt." },
+  { name: "YEBOAH, PRINCE", email: "Prince0420232797D@ktu.edu.gh", studentId: "04/2023/2797D", phone: "+233241074813", level: 200, sex: "M", regular: "weekend", programme: "HND Computer Network Mgt." },
+  { name: "OWUSU-DANSO , EUGENE", email: "EUGENE0420233506D@ktu.edu.gh", studentId: "04/2023/3506D", phone: "+233552373827", level: 200, sex: "M", regular: "weekend", programme: "HND Computer Science" },
+  { name: "ZEYE , BISMARK  MAKAFUI", email: "BismarkB202230128@ktu.edu.gh", studentId: "B202230128", phone: "+233531223888", level: 200, sex: "M", regular: "regular", programme: "BTech Computer Science" },
+  { name: "MENSAH, TOBERT ADDO", email: "TOBERTB202230143@ktu.edu.gh", studentId: "B202230143", phone: "+233202700057", level: 200, sex: "M", regular: "regular", programme: "BTech Computer Science" },
+  { name: "ISSAH , MUSAH", email: "Musah0420221352D@ktu.edu.gh", studentId: "04/2022/1352D", phone: "+233203793527", level: 200, sex: "M", regular: "regular", programme: "HND Computer Network Mgt." },
+  { name: "ANKRAH , VICTOR", email: "Victor0420221464D@ktu.edu.gh", studentId: "04/2022/1464D", phone: "+233554761315", level: 200, sex: "M", regular: "regular", programme: "HND Computer Network Mgt." },
+  { name: "KEKELI YEBOAH, COURAGE", email: "Courage0420221661D@ktu.edu.gh", studentId: "04/2022/1661D", phone: "+233202126764", level: 200, sex: "M", regular: "regular", programme: "HND Computer Science" }
 ];

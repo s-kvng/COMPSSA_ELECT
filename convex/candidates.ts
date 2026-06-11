@@ -2,12 +2,23 @@ import { ConvexError, v } from "convex/values";
 import { mutation } from "./_generated/server";
 import { getUser } from "./lib/auth";
 
+export const generateUploadUrl = mutation({
+  args: {},
+  returns: v.string(),
+  handler: async (ctx) => {
+    const user = await getUser(ctx);
+    if (user.role !== "ec") throw new ConvexError("Forbidden");
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
 export const addCandidate = mutation({
   args: {
     electionId: v.id("elections"),
     categoryId: v.id("categories"),
     userId: v.id("users"),
     bio: v.optional(v.string()),
+    photoStorageId: v.optional(v.id("_storage")),
   },
   returns: v.id("candidates"),
   handler: async (ctx, args) => {
@@ -23,6 +34,7 @@ export const addCandidate = mutation({
       categoryId: args.categoryId,
       userId: args.userId,
       bio: args.bio,
+      photoStorageId: args.photoStorageId,
     });
 
     await ctx.db.patch(args.userId, { role: "candidate" });
