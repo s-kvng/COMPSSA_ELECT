@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { useQuery, useMutation } from 'convex/react';
 import { useParams, useRouter } from 'next/navigation';
 import { useIsMounted } from '@/hooks/useIsMounted';
@@ -177,12 +178,13 @@ export default function VoteCategoryPage() {
                       : 'border-border bg-card hover:border-primary/40 hover:shadow-sm cursor-pointer',
                   ].join(' ')}
                 >
-                  <div className="relative w-full aspect-[4/3] overflow-hidden bg-muted">
+                  <div className="relative w-full aspect-4/3 overflow-hidden bg-muted">
                     {cand.photoUrl ? (
-                      <img
+                      <Image
                         src={cand.photoUrl}
                         alt={cand.userName}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-contain"
                       />
                     ) : (
                       <div
@@ -249,7 +251,7 @@ export default function VoteCategoryPage() {
       )}
 
       {showConfirmModal && selectedCandidate && isMounted && createPortal(
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 z-[200] animate-fade-in">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 z-200 animate-fade-in">
           <div className="bg-card border border-border rounded-2xl w-full max-w-sm p-6 space-y-5 shadow-2xl">
             <div>
               <h3 className="font-sans font-bold text-base text-foreground">Confirm your vote</h3>
@@ -259,7 +261,7 @@ export default function VoteCategoryPage() {
             <div className="flex items-center gap-4 bg-muted/40 border border-border p-4 rounded-xl">
               <div className="h-12 w-12 rounded-xl overflow-hidden shrink-0">
                 {selectedCandidate.photoUrl ? (
-                  <img src={selectedCandidate.photoUrl} alt={selectedCandidate.userName} className="w-full h-full object-cover" />
+                  <Image src={selectedCandidate.photoUrl} alt={selectedCandidate.userName} fill className="object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: getAvatarColor(selectedCandidate.userName).bg }}>
                     <span className="font-bold text-sm" style={{ color: getAvatarColor(selectedCandidate.userName).text }}>
