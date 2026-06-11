@@ -94,6 +94,7 @@ export default function ElectionDetailPage() {
           headers: { 'Content-Type': candidatePhoto.type },
           body: candidatePhoto,
         });
+        if (!res.ok) throw new Error(`Photo upload failed (${res.status})`);
         const { storageId } = await res.json() as { storageId: Id<'_storage'> };
         photoStorageId = storageId;
       }
@@ -368,7 +369,10 @@ export default function ElectionDetailPage() {
                                   onChange={(e) => {
                                     const file = e.target.files?.[0] ?? null;
                                     setCandidatePhoto(file);
-                                    setPhotoPreview(file ? URL.createObjectURL(file) : null);
+                                    setPhotoPreview((prev) => {
+                                      if (prev) URL.revokeObjectURL(prev);
+                                      return file ? URL.createObjectURL(file) : null;
+                                    });
                                   }}
                                 />
                               </label>

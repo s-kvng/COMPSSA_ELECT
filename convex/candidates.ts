@@ -29,6 +29,12 @@ export const addCandidate = mutation({
     if (!election) throw new ConvexError("Election not found");
     if (election.status !== "draft") throw new ConvexError("Can only modify elections in draft status");
 
+    const targetUser = await ctx.db.get(args.userId);
+    if (!targetUser) throw new ConvexError("User not found");
+    if (targetUser.role === "ec" || targetUser.role === "hod") {
+      throw new ConvexError("EC and HOD users cannot be assigned as candidates");
+    }
+
     const candidateId = await ctx.db.insert("candidates", {
       electionId: args.electionId,
       categoryId: args.categoryId,
