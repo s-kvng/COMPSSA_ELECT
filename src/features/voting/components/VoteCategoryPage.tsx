@@ -325,7 +325,7 @@ export default function VoteCategoryPage() {
             <div className="flex items-center gap-4 bg-muted/40 border border-border p-4 rounded-xl">
               <div className="relative h-12 w-12 rounded-xl overflow-hidden shrink-0">
                 {selectedCandidate.photoUrl ? (
-                  <Image src={selectedCandidate.photoUrl} alt={selectedCandidate.userName} fill className="object-cover" />
+                  <Image src={selectedCandidate.photoUrl} alt={selectedCandidate.userName} fill sizes="48px" className="object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: getAvatarColor(selectedCandidate.userName).bg }}>
                     <span className="font-bold text-sm" style={{ color: getAvatarColor(selectedCandidate.userName).text }}>
