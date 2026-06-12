@@ -60,6 +60,56 @@ export const getCurrentUser = query({
   },
 });
 
+export const searchStudents = query({
+  args: {
+    searchText: v.string(),
+    excludeUserIds: v.array(v.id("users")),
+  },
+  returns: v.array(
+    v.object({
+      _id: v.id("users"),
+      name: v.string(),
+      studentId: v.string(),
+      role: userRoleValidator,
+    }),
+  ),
+  handler: async (ctx, { searchText, excludeUserIds }) => {
+    const user = await getUser(ctx);
+    if (user.role !== "ec") throw new ConvexError("Forbidden");
+
+    const q = searchText.trim();
+    if (!q) return [];
+
+    const excludeSet = new Set(excludeUserIds);
+    const isEligible = (u: { _id: Id<"users">; role: string }) =>
+      !excludeSet.has(u._id) && u.role !== "hod" && u.role !== "ec";
+    const toDto = (u: { _id: Id<"users">; name: string; studentId: string; role: "student" | "candidate" | "ec" | "hod" }) => ({
+      _id: u._id,
+      name: u.name,
+      studentId: u.studentId,
+      role: u.role,
+    });
+
+    // Digit-led query → prefix range on studentId index
+    if (/^\d/.test(q)) {
+      const results = await ctx.db
+        .query("users")
+        .withIndex("by_student_id", (idx) =>
+          idx.gte("studentId", q).lte("studentId", q + "￿"),
+        )
+        .take(30);
+      return results.filter(isEligible).slice(0, 10).map(toDto);
+    }
+
+    // Name full-text search
+    const results = await ctx.db
+      .query("users")
+      .withSearchIndex("search_name", (idx) => idx.search("name", q))
+      .take(30);
+    return results.filter(isEligible).slice(0, 10).map(toDto);
+  },
+});
+
 export const getStudents = query({
   args: {},
   handler: async (ctx) => {
