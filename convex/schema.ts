@@ -37,7 +37,8 @@ export default defineSchema({
   })
     .index("by_email", ["email"])
     .index("by_student_id", ["studentId"])
-    .index("by_role", ["role"]),
+    .index("by_role", ["role"])
+    .searchIndex("search_name", { searchField: "name" }),
 
   elections: defineTable({
     title: v.string(),

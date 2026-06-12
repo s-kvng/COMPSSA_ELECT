@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useQuery, useMutation } from 'convex/react';
+import StudentSearchCombobox from './StudentSearchCombobox';
 import { useParams, useRouter } from 'next/navigation';
 import { useIsMounted } from '@/hooks/useIsMounted';
 import { createPortal } from 'react-dom';
@@ -26,7 +27,6 @@ export default function ElectionDetailPage() {
   const electionId = params.id as Id<'elections'>;
 
   const election = useQuery(api.elections.getElection, { electionId });
-  const students = useQuery(api.users.getStudents);
 
   const addCategory = useMutation(api.categories.addCategory);
   const removeCategory = useMutation(api.categories.removeCategory);
@@ -143,8 +143,7 @@ export default function ElectionDetailPage() {
   }
   const canLock = isEditable && validationErrors.length === 0;
 
-  const enrolledUserIds = new Set(election.categories.flatMap((c) => c.candidates.map((cand) => cand.userId)));
-  const eligibleStudents = students?.filter((u) => !enrolledUserIds.has(u._id) && u.role !== 'ec' && u.role !== 'hod') ?? [];
+  const enrolledUserIds = election.categories.flatMap((c) => c.candidates.map((cand) => cand.userId as Id<'users'>));
 
   return (
     <div className="py-4 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full space-y-6 animate-fade-in font-sans">
@@ -330,17 +329,11 @@ export default function ElectionDetailPage() {
                       <div className="p-4 bg-muted/40 border border-border rounded-xl space-y-3 animate-fade-in">
                         <p className="text-xs font-semibold text-foreground">Add Candidate</p>
                         <form onSubmit={(e) => handleAddCandidate(e, cat._id)} className="space-y-3">
-                          <select
-                            required
+                          <StudentSearchCombobox
                             value={selectedUserId}
-                            onChange={(e) => setSelectedUserId(e.target.value)}
-                            className="block w-full px-3 py-2 text-xs border border-border bg-card rounded-lg focus:border-primary outline-none font-sans"
-                          >
-                            <option value="">— Select student —</option>
-                            {eligibleStudents.map((s) => (
-                              <option key={s._id} value={s._id}>{s.name} ({s.studentId})</option>
-                            ))}
-                          </select>
+                            onChange={setSelectedUserId}
+                            excludeUserIds={enrolledUserIds}
+                          />
                           <textarea
                             rows={2}
                             value={candidateBio}
