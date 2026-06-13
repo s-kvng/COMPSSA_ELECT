@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useCurrentUser } from '@/shared/auth';
 import { api } from '../../../../convex/_generated/api';
 import type { Id } from '../../../../convex/_generated/dataModel';
+import { ResultsFooterAd } from '@/components/extra';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   Award01Icon,
@@ -228,6 +229,8 @@ export default function ResultsPage() {
             );
           })}
         </div>
+
+        <ResultsFooterAd />
 
         <div className="text-center text-[10px] font-mono text-slate-400 py-6">
           <p>© 2026 Department of Computer Science • Ghana</p>
