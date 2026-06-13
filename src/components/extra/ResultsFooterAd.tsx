@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useAdDismiss } from './useAdDismiss';
 
 const WEB_URL = 'https://xolaceinc.com';
@@ -14,9 +15,15 @@ export function ResultsFooterAd() {
     <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-3xs">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <span className="shrink-0 font-mono text-sm font-extrabold text-slate-800 border border-slate-200 bg-slate-50 rounded-lg px-2.5 py-1">
-            XL
-          </span>
+          <div className="shrink-0 w-14 h-14 rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
+            <Image
+              src="/campfire-mini.jpeg"
+              alt="Xolace"
+              width={56}
+              height={56}
+              className="w-full h-full object-cover"
+            />
+          </div>
           <div className="min-w-0">
             <p className="text-xs font-bold text-slate-900">
               This platform was built free by{' '}
