@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
-import type { Sponsor } from '../types';
+import type { Sponsor } from './types';
 
 interface AdWrapperProps {
   sponsor: Sponsor;
