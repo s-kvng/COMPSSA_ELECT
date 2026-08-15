@@ -1,10 +1,17 @@
 import { getAuthUserId, modifyAccountCredentials } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
-import { action, internalMutation, internalQuery, query } from "./_generated/server";
+import { action, internalAction, internalMutation, internalQuery, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { getUser } from "./lib/auth";
-import { userRoleValidator, sexValidator, studentTypeValidator } from "./schema";
-import { sendSms, passwordSmsMessage } from "./lib/sms";
+import {
+  userRoleValidator,
+  sexValidator,
+  studentTypeValidator,
+  studentLevelValidator,
+  seedJobStatusValidator,
+} from "./schema";
+import { sendSms, sendBatchSms, passwordSmsMessage } from "./lib/sms";
+import { generatePassword } from "./lib/password";
 import type { Doc, Id } from "./_generated/dataModel";
 
 export type CurrentUserResult = {
@@ -224,10 +231,7 @@ export const resetStudentPassword = action({
     });
 
     // Generate a fresh password and overwrite the hashed credentials
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    const bytes = new Uint8Array(8);
-    crypto.getRandomValues(bytes);
-    const newPassword = Array.from(bytes, (b) => chars[b % chars.length]).join("");
+    const newPassword = generatePassword();
 
     await modifyAccountCredentials(ctx, {
       provider: "password",
@@ -250,5 +254,417 @@ export const resetStudentPassword = action({
     }
 
     return { smsSent, phone };
+  },
+});
+
+export const getUserByEmail = internalQuery({
+  args: { email: v.string() },
+  returns: v.union(
+    v.object({
+      _id: v.id("users"),
+      _creationTime: v.number(),
+      name: v.string(),
+      email: v.string(),
+      studentId: v.string(),
+      role: userRoleValidator,
+      isFirstLogin: v.boolean(),
+      phone: v.optional(v.string()),
+      level: v.optional(v.number()),
+      sex: v.optional(sexValidator),
+      regular: v.optional(studentTypeValidator),
+      programme: v.optional(v.string()),
+    }),
+    v.null(),
+  ),
+  handler: async (ctx, { email }) => {
+    return await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", email))
+      .unique();
+  },
+});
+
+/**
+ * Resets password + re-sends credentials via SMS for a specific, small list
+ * of accounts looked up by email — any role (student, candidate, ec, hod).
+ * Built for spot-testing/handling a handful of accounts (e.g. ECs
+ * themselves) ahead of a full resetAllStudentPasswords run, without waiting
+ * on the chunked job machinery. Not chunked — keep the list small (a few
+ * dozen at most); sendBatchSms still internally chunks its own HTTP calls.
+ *
+ * CLI-run admin operation, same trust model as resetAllStudentPasswords —
+ * see the comment there for why there's no getAuthUserId/EC check here.
+ *
+ * Usage: bunx convex run users:resetPasswordsByEmail '{"emails":["ec@compssa.org"]}'
+ */
+export const resetPasswordsByEmail = action({
+  args: { emails: v.array(v.string()) },
+  returns: v.object({
+    resetCount: v.number(),
+    smsSent: v.number(),
+    smsFailed: v.number(),
+    errors: v.array(v.string()),
+  }),
+  handler: async (ctx, { emails }) => {
+    const apiKey = process.env.ARKESEL_API_KEY;
+    if (!apiKey) console.warn("ARKESEL_API_KEY not set — passwords will be reset but no SMS will be sent.");
+
+    let resetCount = 0;
+    const errors: string[] = [];
+    const smsRecipients: { phone: string; name: string; email: string; password: string }[] = [];
+
+    for (const email of emails) {
+      const user: Doc<"users"> | null = await ctx.runQuery(internal.users.getUserByEmail, { email });
+      if (!user) {
+        errors.push(`No user found for ${email}`);
+        continue;
+      }
+      if (!user.phone) {
+        errors.push(`No phone on record for ${email} — skipped`);
+        continue;
+      }
+
+      try {
+        const newPassword = generatePassword();
+
+        await modifyAccountCredentials(ctx, {
+          provider: "password",
+          account: { id: user.email, secret: newPassword },
+        });
+
+        await ctx.runMutation(internal.users.patchUser, { userId: user._id, isFirstLogin: true });
+
+        resetCount++;
+
+        if (apiKey) {
+          smsRecipients.push({
+            phone: user.phone,
+            name: user.name.split(" ")[0],
+            email: user.email,
+            password: newPassword,
+          });
+        }
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        errors.push(`Reset failed for ${email}: ${msg}`);
+      }
+    }
+
+    let smsSent = 0;
+    let smsFailed = 0;
+    if (apiKey && smsRecipients.length > 0) {
+      const result = await sendBatchSms(apiKey, smsRecipients);
+      smsSent = result.sentCount;
+      smsFailed = result.failedPhones.length;
+      if (result.failedPhones.length > 0) {
+        errors.push(
+          `SMS batch failed for: ${result.failedPhones.join(", ")} — reason: ${result.failureReasons.join(" | ")}`,
+        );
+      }
+    }
+
+    return { resetCount, smsSent, smsFailed, errors };
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Bulk password reset — chunked across scheduled action invocations, same
+// pattern as convex/seed.ts's seed_jobs (see that file for the rationale).
+// Prod-critical: students are already seeded, so this is the path actually
+// used to get everyone working credentials. Progress tracked in reset_jobs;
+// poll with getResetJobStatus.
+// ---------------------------------------------------------------------------
+
+const RESET_CHUNK_SIZE = 25;
+const MAX_STORED_RESET_ERRORS = 50;
+
+export const getResettableStudentIds = internalQuery({
+  args: {
+    level: v.optional(studentLevelValidator),
+    excludeEmails: v.optional(v.array(v.string())),
+  },
+  returns: v.array(v.id("users")),
+  handler: async (ctx, { level, excludeEmails }): Promise<Id<"users">[]> => {
+    const [students, candidates] = await Promise.all([
+      ctx.db.query("users").withIndex("by_role", (q) => q.eq("role", "student")).collect(),
+      ctx.db.query("users").withIndex("by_role", (q) => q.eq("role", "candidate")).collect(),
+    ]);
+    const all = [...students, ...candidates];
+    const excludeSet = new Set((excludeEmails ?? []).map((e) => e.toLowerCase()));
+    const filtered = all
+      .filter((u) => level === undefined || u.level === level)
+      .filter((u) => !excludeSet.has(u.email.toLowerCase()));
+    return filtered.map((u) => u._id);
+  },
+});
+
+/**
+ * Bulk password reset + re-SMS for every student/candidate (optionally
+ * filtered to one `level`, and optionally excluding specific emails — e.g.
+ * accounts already handled individually via resetPasswordsByEmail so they
+ * don't get a second, redundant reset + SMS).
+ *
+ * This is a CLI-run admin operation (like seed:seedStudents) — access is
+ * controlled by possession of deploy-key CLI access, not an app session, so
+ * it deliberately has no getAuthUserId/EC-role check: `bunx convex run`
+ * carries no authenticated identity and that check would always reject it.
+ * Once an EC-facing UI exists for this, add a thin auth-checked wrapper
+ * action rather than gating this one.
+ *
+ * Mirrors seed.ts's chunked-job pattern: returns immediately with a jobId,
+ * the actual work happens in scheduled processResetChunk invocations.
+ *
+ * Usage: bunx convex run users:resetAllStudentPasswords
+ *        bunx convex run users:resetAllStudentPasswords '{"level":100}'
+ *        bunx convex run users:resetAllStudentPasswords '{"excludeEmails":["ec@compssa.org"]}'
+ * Poll:  bunx convex run users:getResetJobStatus '{"jobId":"<id>"}'
+ */
+export const resetAllStudentPasswords = action({
+  args: {
+    level: v.optional(studentLevelValidator),
+    excludeEmails: v.optional(v.array(v.string())),
+  },
+  returns: v.object({
+    jobId: v.optional(v.id("reset_jobs")),
+    totalStudents: v.number(),
+    message: v.string(),
+  }),
+  handler: async (ctx, args) => {
+    const userIds: Id<"users">[] = await ctx.runQuery(internal.users.getResettableStudentIds, {
+      level: args.level,
+      excludeEmails: args.excludeEmails,
+    });
+
+    if (userIds.length === 0) {
+      return { jobId: undefined, totalStudents: 0, message: "No matching students found." };
+    }
+
+    if (!process.env.ARKESEL_API_KEY) {
+      console.warn("ARKESEL_API_KEY not set — passwords will be reset but no SMS will be sent.");
+    }
+
+    const jobId: Id<"reset_jobs"> = await ctx.runMutation(internal.users.createResetJob, { userIds });
+
+    await ctx.scheduler.runAfter(0, internal.users.processResetChunk, { jobId });
+
+    return {
+      jobId,
+      totalStudents: userIds.length,
+      message: `Reset started in the background across ${Math.ceil(userIds.length / RESET_CHUNK_SIZE)} chunk(s). Check progress with: bunx convex run users:getResetJobStatus '{"jobId":"${jobId}"}'`,
+    };
+  },
+});
+
+export const createResetJob = internalMutation({
+  args: { userIds: v.array(v.id("users")) },
+  returns: v.id("reset_jobs"),
+  handler: async (ctx, { userIds }): Promise<Id<"reset_jobs">> => {
+    return await ctx.db.insert("reset_jobs", {
+      status: "running",
+      userIds,
+      totalStudents: userIds.length,
+      processedIndex: 0,
+      reset: 0,
+      smsSent: 0,
+      smsFailed: 0,
+      errorCount: 0,
+      errors: [],
+      startedAt: Date.now(),
+    });
+  },
+});
+
+export const getResetJob = internalQuery({
+  args: { jobId: v.id("reset_jobs") },
+  returns: v.union(
+    v.object({
+      _id: v.id("reset_jobs"),
+      _creationTime: v.number(),
+      status: seedJobStatusValidator,
+      userIds: v.array(v.id("users")),
+      totalStudents: v.number(),
+      processedIndex: v.number(),
+      reset: v.number(),
+      smsSent: v.number(),
+      smsFailed: v.number(),
+      errorCount: v.number(),
+      errors: v.array(v.string()),
+      startedAt: v.number(),
+      completedAt: v.optional(v.number()),
+    }),
+    v.null(),
+  ),
+  handler: async (ctx, { jobId }): Promise<Doc<"reset_jobs"> | null> => {
+    return await ctx.db.get(jobId);
+  },
+});
+
+export const getResetJobStatus = internalQuery({
+  args: { jobId: v.id("reset_jobs") },
+  returns: v.union(
+    v.object({
+      status: seedJobStatusValidator,
+      totalStudents: v.number(),
+      processedIndex: v.number(),
+      reset: v.number(),
+      smsSent: v.number(),
+      smsFailed: v.number(),
+      errorCount: v.number(),
+      errors: v.array(v.string()),
+      startedAt: v.number(),
+      completedAt: v.optional(v.number()),
+    }),
+    v.null(),
+  ),
+  handler: async (ctx, { jobId }) => {
+    const job = await ctx.db.get(jobId);
+    if (!job) return null;
+    return {
+      status: job.status,
+      totalStudents: job.totalStudents,
+      processedIndex: job.processedIndex,
+      reset: job.reset,
+      smsSent: job.smsSent,
+      smsFailed: job.smsFailed,
+      errorCount: job.errorCount,
+      errors: job.errors,
+      startedAt: job.startedAt,
+      completedAt: job.completedAt,
+    };
+  },
+});
+
+export const applyResetChunkResult = internalMutation({
+  args: {
+    jobId: v.id("reset_jobs"),
+    resetDelta: v.number(),
+    smsSentDelta: v.number(),
+    smsFailedDelta: v.number(),
+    newErrors: v.array(v.string()),
+    newProcessedIndex: v.number(),
+    done: v.boolean(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args): Promise<null> => {
+    const job = await ctx.db.get(args.jobId);
+    if (!job) return null;
+
+    const errors = [...job.errors, ...args.newErrors].slice(0, MAX_STORED_RESET_ERRORS);
+
+    await ctx.db.patch(args.jobId, {
+      processedIndex: args.newProcessedIndex,
+      reset: job.reset + args.resetDelta,
+      smsSent: job.smsSent + args.smsSentDelta,
+      smsFailed: job.smsFailed + args.smsFailedDelta,
+      errorCount: job.errorCount + args.newErrors.length,
+      errors,
+      status: args.done ? "done" : "running",
+      completedAt: args.done ? Date.now() : job.completedAt,
+    });
+    return null;
+  },
+});
+
+/**
+ * Processes one chunk (RESET_CHUNK_SIZE users) of a bulk reset job: for each
+ * user, generates a fresh password, overwrites their hashed credentials,
+ * re-arms isFirstLogin, and queues them for one batched Arkesel SMS call
+ * covering the whole chunk. Reschedules itself until the job is exhausted.
+ */
+export const processResetChunk = internalAction({
+  args: { jobId: v.id("reset_jobs") },
+  returns: v.null(),
+  handler: async (ctx, { jobId }): Promise<null> => {
+    const job: Doc<"reset_jobs"> | null = await ctx.runQuery(internal.users.getResetJob, { jobId });
+    if (!job || job.status === "done") return null;
+
+    const chunkIds = job.userIds.slice(job.processedIndex, job.processedIndex + RESET_CHUNK_SIZE);
+
+    if (chunkIds.length === 0) {
+      await ctx.runMutation(internal.users.applyResetChunkResult, {
+        jobId,
+        resetDelta: 0,
+        smsSentDelta: 0,
+        smsFailedDelta: 0,
+        newErrors: [],
+        newProcessedIndex: job.processedIndex,
+        done: true,
+      });
+      return null;
+    }
+
+    const apiKey = process.env.ARKESEL_API_KEY;
+    let resetDelta = 0;
+    const errors: string[] = [];
+    const smsRecipients: { phone: string; name: string; email: string; password: string }[] = [];
+
+    for (const userId of chunkIds) {
+      const student: Doc<"users"> | null = await ctx.runQuery(internal.users.getUserById, { userId });
+      if (!student) {
+        errors.push(`User ${userId} no longer exists`);
+        continue;
+      }
+      if (!student.phone) {
+        errors.push(`No phone on record for ${student.studentId} (${student.email}) — skipped`);
+        continue;
+      }
+
+      try {
+        const newPassword = generatePassword();
+
+        await modifyAccountCredentials(ctx, {
+          provider: "password",
+          account: { id: student.email, secret: newPassword },
+        });
+
+        await ctx.runMutation(internal.users.patchUser, { userId, isFirstLogin: true });
+
+        resetDelta++;
+
+        if (apiKey) {
+          smsRecipients.push({
+            phone: student.phone,
+            name: student.name.split(" ")[0],
+            email: student.email,
+            password: newPassword,
+          });
+        }
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        errors.push(`Reset failed for ${student.studentId} (${student.email}): ${msg}`);
+      }
+    }
+
+    let smsSentDelta = 0;
+    let smsFailedDelta = 0;
+    if (apiKey && smsRecipients.length > 0) {
+      const result = await sendBatchSms(apiKey, smsRecipients);
+      smsSentDelta = result.sentCount;
+      smsFailedDelta = result.failedPhones.length;
+      if (result.failedPhones.length > 0) {
+        errors.push(
+          `SMS batch failed for: ${result.failedPhones.join(", ")} — reason: ${result.failureReasons.join(" | ")}`,
+        );
+      }
+    }
+
+    const newProcessedIndex = job.processedIndex + chunkIds.length;
+    const done = newProcessedIndex >= job.userIds.length;
+
+    await ctx.runMutation(internal.users.applyResetChunkResult, {
+      jobId,
+      resetDelta,
+      smsSentDelta,
+      smsFailedDelta,
+      newErrors: errors,
+      newProcessedIndex,
+      done,
+    });
+
+    if (!done) {
+      await ctx.scheduler.runAfter(0, internal.users.processResetChunk, { jobId });
+    }
+
+    return null;
   },
 });

@@ -218,7 +218,7 @@ export default function LiveDashboardPage() {
             Eligible Board
           </div>
           <p className="text-2xl font-mono font-extrabold text-foreground">{registeredCount}</p>
-          <p className="text-[10px] text-muted-foreground">Registered department electors</p>
+          <p className="text-[10px] text-muted-foreground">Verified department electors</p>
         </div>
 
         <div className="bg-card border border-border rounded-xl p-5 space-y-1">

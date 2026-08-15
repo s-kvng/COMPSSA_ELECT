@@ -20,6 +20,15 @@ export const electionStatusValidator = v.union(
   v.literal("published"),
 );
 
+export const studentLevelValidator = v.union(
+  v.literal(100),
+  v.literal(200),
+  v.literal(300),
+  v.literal(400),
+);
+
+export const seedJobStatusValidator = v.union(v.literal("running"), v.literal("done"));
+
 export default defineSchema({
   ...authTables,
 
@@ -89,4 +98,41 @@ export default defineSchema({
     timestamp: v.number(),
     metadata: v.optional(v.string()),
   }).index("by_election", ["electionId"]),
+
+  // Tracks a `seedStudents` run that spans multiple scheduled action
+  // invocations (chunked to stay under Convex's per-function resource
+  // limits on large batches). Poll with `seed:getSeedJobStatus`.
+  seed_jobs: defineTable({
+    level: v.optional(studentLevelValidator),
+    status: seedJobStatusValidator,
+    totalStudents: v.number(),
+    processedIndex: v.number(),
+    seeded: v.number(),
+    skipped: v.number(),
+    smsSent: v.number(),
+    smsFailed: v.number(),
+    errorCount: v.number(),
+    // Bounded sample of error messages — full count is in `errorCount`.
+    errors: v.array(v.string()),
+    startedAt: v.number(),
+    completedAt: v.optional(v.number()),
+  }).index("by_status", ["status"]),
+
+  // Tracks a `resetAllStudentPasswords` run that spans multiple scheduled
+  // action invocations (same chunking rationale as `seed_jobs`). The target
+  // user set is snapshotted at job creation so chunking stays a simple
+  // index offset. Poll with `users:getResetJobStatus`.
+  reset_jobs: defineTable({
+    status: seedJobStatusValidator,
+    userIds: v.array(v.id("users")),
+    totalStudents: v.number(),
+    processedIndex: v.number(),
+    reset: v.number(),
+    smsSent: v.number(),
+    smsFailed: v.number(),
+    errorCount: v.number(),
+    errors: v.array(v.string()),
+    startedAt: v.number(),
+    completedAt: v.optional(v.number()),
+  }).index("by_status", ["status"]),
 });

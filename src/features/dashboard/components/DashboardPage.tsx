@@ -8,6 +8,8 @@ import { useIsMounted } from '@/hooks/useIsMounted';
 import { api } from '../../../../convex/_generated/api';
 import StatusBadge from '@/components/StatusBadge';
 import EmptyState from '@/components/EmptyState';
+import { LiveCounter } from '@/components/LiveCounter';
+import { XolaceStrip } from '@/components/extra';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   CheckmarkCircle01Icon,
@@ -82,8 +84,11 @@ export default function DashboardPage() {
             Department of Computer Science • Role: <span className="font-semibold text-slate-700 capitalize">{currentUser.role}</span>
           </p>
         </div>
-        <div className="flex items-center gap-2 font-mono text-xs bg-slate-50 border border-slate-200 px-3.5 py-1.5 rounded-lg text-slate-500 shadow-2xs">
-          <span>UTC TIME: {isMounted && currentTime ? currentTime : '---'}</span>
+        <div className="flex items-center gap-2.5">
+          <LiveCounter userId={currentUser._id} />
+          <div className="flex items-center gap-2 font-mono text-xs bg-slate-50 border border-slate-200 px-3.5 py-1.5 rounded-lg text-slate-500 shadow-2xs">
+            <span>UTC TIME: {isMounted && currentTime ? currentTime : '---'}</span>
+          </div>
         </div>
       </div>
 
@@ -363,6 +368,8 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      <XolaceStrip placementKey="dashboard" />
     </div>
   );
 }
