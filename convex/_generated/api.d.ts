@@ -9,6 +9,7 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as authProbe from "../authProbe.js";
 import type * as candidates from "../candidates.js";
 import type * as categories from "../categories.js";
 import type * as crons from "../crons.js";
@@ -21,9 +22,11 @@ import type * as ec_actions from "../ec_actions.js";
 import type * as elections from "../elections.js";
 import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as lib_password from "../lib/password.js";
 import type * as lib_sms from "../lib/sms.js";
 import type * as results from "../results.js";
 import type * as seed from "../seed.js";
+import type * as testSms from "../testSms.js";
 import type * as users from "../users.js";
 import type * as votes from "../votes.js";
 
@@ -35,6 +38,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  authProbe: typeof authProbe;
   candidates: typeof candidates;
   categories: typeof categories;
   crons: typeof crons;
@@ -47,9 +51,11 @@ declare const fullApi: ApiFromModules<{
   elections: typeof elections;
   http: typeof http;
   "lib/auth": typeof lib_auth;
+  "lib/password": typeof lib_password;
   "lib/sms": typeof lib_sms;
   results: typeof results;
   seed: typeof seed;
+  testSms: typeof testSms;
   users: typeof users;
   votes: typeof votes;
 }>;
