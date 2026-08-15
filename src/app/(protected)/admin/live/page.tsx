@@ -21,9 +21,10 @@ export default function HodLiveCenterRoute() {
     currentElection?._id ? { electionId: currentElection._id } : 'skip',
   );
   const turnout = useQuery(
-    api.ec_actions.getTurnout,
+    api.ec_actions.getVoterTurnout,
     currentElection?._id ? { electionId: currentElection._id } : 'skip',
   );
+  const electorBase = useQuery(api.ec_actions.getElectorBase, {});
 
   if (currentElection === undefined) {
     return (
@@ -46,7 +47,7 @@ export default function HodLiveCenterRoute() {
   }
 
   const uniqueVoters = turnout?.uniqueVoters ?? 0;
-  const registeredCount = turnout?.registeredCount ?? 0;
+  const registeredCount = electorBase?.registeredCount ?? 0;
   const turnoutPercent = registeredCount > 0 ? Math.round((uniqueVoters / registeredCount) * 100) : 0;
   const resultCategories = results?.status === 'ok' ? results.categories : [];
 

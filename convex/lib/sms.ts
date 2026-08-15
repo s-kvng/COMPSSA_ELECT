@@ -10,11 +10,34 @@ const SMS_BATCH_CHUNK_SIZE = 100;
 // Normalizes a Ghanaian phone number to the "233XXXXXXXXX" form Arkesel expects
 // (no "+", no leading "0"). Accepts "+233...", "233...", or local "0..." input,
 // which is the range of formats seen in convex/data/students.ts and manual entry.
-function normalizePhone(phone: string): string {
+export function normalizePhone(phone: string): string {
   const digits = phone.replace(/[^\d]/g, "");
   if (digits.startsWith("233")) return digits;
   if (digits.startsWith("0")) return `233${digits.slice(1)}`;
   return digits;
+}
+
+/**
+ * A Ghanaian MSISDN is 233 + a 9-digit national number whose first digit is
+ * 2 or 5 (02x / 05x mobile ranges) — 12 digits in total.
+ *
+ * This matters far more than it looks: Arkesel's template-send endpoint
+ * rejects the WHOLE request with HTTP 422 if even one recipient key is
+ * malformed, so a single bad number silently takes down every other
+ * recipient in the same chunk. Filtering here is what keeps one typo from
+ * costing 24 working students their credentials.
+ */
+export function isValidGhanaPhone(phone: string): boolean {
+  return /^233[25]\d{8}$/.test(normalizePhone(phone));
+}
+
+export function describePhoneProblem(phone: string): string {
+  const n = normalizePhone(phone);
+  if (!n) return "empty phone number";
+  if (!n.startsWith("233")) return `not a Ghana number (normalizes to "${n}")`;
+  if (n.length < 12) return `too short — ${n.length} digits, expected 12 ("${n}")`;
+  if (n.length > 12) return `too long — ${n.length} digits, expected 12 ("${n}")`;
+  return `invalid mobile prefix "0${n.slice(3, 5)}" ("${n}")`;
 }
 
 export async function sendSms(apiKey: string, phone: string, message: string): Promise<void> {

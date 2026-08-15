@@ -1,7 +1,7 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
 import { query } from "./_generated/server";
-import { getUser } from "./lib/auth";
+import { readVoteCount } from "./lib/tallies";
 
 export const electionResults = query({
   args: { electionId: v.id("elections") },
@@ -58,18 +58,22 @@ export const electionResults = query({
 
         const candidates = await Promise.all(
           candidateDocs.map(async (c) => {
-            const [candUser, votes] = await Promise.all([
+            // Counter read, not a `voted_log` scan: this is a live subscription,
+            // so scanning here re-read every ballot on every vote, for every
+            // connected viewer. See `lib/tallies.ts`.
+            const [candUser, count] = await Promise.all([
               ctx.db.get(c.userId),
-              ctx.db
-                .query("voted_log")
-                .withIndex("by_candidate", (q) => q.eq("candidateId", c._id))
-                .take(10000),
+              readVoteCount(ctx, {
+                electionId: args.electionId,
+                categoryId: category._id,
+                candidateId: c._id,
+              }),
             ]);
             return {
               _id: c._id,
               userId: c.userId,
               userName: candUser?.name ?? "Unknown",
-              count: votes.length,
+              count,
             };
           }),
         );
@@ -77,13 +81,10 @@ export const electionResults = query({
         // For single-candidate categories, also count no-votes
         let noVoteCount: number | undefined;
         if (candidateDocs.length === 1) {
-          const noVotes = await ctx.db
-            .query("voted_log")
-            .withIndex("by_categoryId_and_noVote", (q) =>
-              q.eq("categoryId", category._id).eq("noVote", true),
-            )
-            .take(10000);
-          noVoteCount = noVotes.length;
+          noVoteCount = await readVoteCount(ctx, {
+            electionId: args.electionId,
+            categoryId: category._id,
+          });
         }
 
         return { _id: category._id, name: category.name, noVoteCount, candidates };
@@ -118,10 +119,10 @@ export const myVoteCount = query({
       .unique();
 
     if (!candidateEntry) return null;
-    const votes = await ctx.db
-      .query("voted_log")
-      .withIndex("by_candidate", (q) => q.eq("candidateId", candidateEntry._id))
-      .take(10000);
-    return votes.length;
+    return await readVoteCount(ctx, {
+      electionId: election._id,
+      categoryId: candidateEntry.categoryId,
+      candidateId: candidateEntry._id,
+    });
   },
 });

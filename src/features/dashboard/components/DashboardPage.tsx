@@ -35,12 +35,12 @@ export default function DashboardPage() {
   const candidateTally = useQuery(
     api.results.myVoteCount,
   );
+  const isEcOrHod = currentUser?.role === 'ec' || currentUser?.role === 'hod';
   const turnout = useQuery(
-    api.ec_actions.getTurnout,
-    currentElection?._id && (currentUser?.role === 'ec' || currentUser?.role === 'hod')
-      ? { electionId: currentElection._id }
-      : 'skip',
+    api.ec_actions.getVoterTurnout,
+    currentElection?._id && isEcOrHod ? { electionId: currentElection._id } : 'skip',
   );
+  const electorBase = useQuery(api.ec_actions.getElectorBase, isEcOrHod ? {} : 'skip');
   const recentActions = useQuery(
     api.ec_actions.getRecentEcActions,
     currentElection?._id && currentUser?.role === 'ec'
@@ -65,7 +65,7 @@ export default function DashboardPage() {
   const hasFinishedVoting = totalCategories > 0 && votedCount === totalCategories;
 
   const uniqueVoters = turnout?.uniqueVoters ?? 0;
-  const registeredCount = turnout?.registeredCount ?? 0;
+  const registeredCount = electorBase?.registeredCount ?? 0;
   const turnoutPercent = registeredCount > 0 ? Math.round((uniqueVoters / registeredCount) * 100) : 0;
 
   const candidateCategoryName = currentElection?.categories.find(

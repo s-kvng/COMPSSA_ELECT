@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { assertStudentVoter, getUser } from "./lib/auth";
+import { bumpUniqueVoters, bumpVoteTally } from "./lib/tallies";
 
 export const castVote = mutation({
   args: {
@@ -57,6 +58,28 @@ export const castVote = mutation({
       ...(args.noVote ? { noVote: true } : { candidateId: args.candidateId }),
       timestamp: Date.now(),
     });
+
+    // Keep the dashboard counters in step with the ballot just written. These
+    // are a cache over `voted_log` — see `lib/tallies.ts` — so a failure here
+    // rolls back the ballot too, which is what we want: the two never diverge.
+    await bumpVoteTally(ctx, {
+      electionId: args.electionId,
+      categoryId: args.categoryId,
+      candidateId: args.noVote ? undefined : args.candidateId,
+      delta: 1,
+    });
+
+    // Turnout counts *students*, not ballots. This is the student's first
+    // ballot in the election iff the row just inserted is the only one.
+    const ballotsThisElection = await ctx.db
+      .query("voted_log")
+      .withIndex("by_voter_election", (q) =>
+        q.eq("studentId", user._id).eq("electionId", args.electionId),
+      )
+      .take(2);
+    if (ballotsThisElection.length === 1) {
+      await bumpUniqueVoters(ctx, args.electionId, 1);
+    }
 
     return { status: "success" as const };
   },

@@ -91,6 +91,57 @@ export default defineSchema({
     .index("by_candidate", ["candidateId"])
     .index("by_categoryId_and_noVote", ["categoryId", "noVote"]),
 
+  // Denormalised turnout counter — one doc per election. Maintained by
+  // `castVote` so the live dashboards never have to scan `voted_log` to answer
+  // "how many students have voted". Rebuild with `tallies:startTallyBackfill`.
+  election_tallies: defineTable({
+    electionId: v.id("elections"),
+    uniqueVoters: v.number(),
+    // False until every pre-existing ballot has been folded in by
+    // `tallies:startTallyBackfill`. While false the read paths ignore the
+    // counters entirely and scan `voted_log` instead, so a missing or
+    // half-built counter can never surface as a wrong vote count — only as a
+    // slower query. Set true at election creation (nothing to backfill) or on
+    // backfill completion. Optional so no existing row needs migrating: absent
+    // reads as not-ready, which is the safe direction to fail.
+    countersReady: v.optional(v.boolean()),
+  }).index("by_election", ["electionId"]),
+
+  // Denormalised vote counter — one doc per (category, candidate), plus one
+  // per category with `candidateId` unset holding that category's no-vote
+  // count. Same rationale as `election_tallies`: keeps `results:electionResults`
+  // off a full `voted_log` scan per candidate per subscriber per vote.
+  vote_tallies: defineTable({
+    electionId: v.id("elections"),
+    categoryId: v.id("categories"),
+    candidateId: v.optional(v.id("candidates")),
+    count: v.number(),
+  })
+    .index("by_election", ["electionId"])
+    .index("by_candidate", ["candidateId"])
+    .index("by_category_and_candidate", ["categoryId", "candidateId"]),
+
+  // Tracks a `tallies:startTallyBackfill` run — the chunked rebuild of the two
+  // counter tables above from the `voted_log` source of truth. Chunked for the
+  // same reason as `seed_jobs`: a full election's ballots exceed the per-mutation
+  // document-read limit. Poll with `tallies:getTallyJobStatus`.
+  tally_jobs: defineTable({
+    electionId: v.id("elections"),
+    status: seedJobStatusValidator,
+    // Only ballots created strictly before this are counted by the backfill;
+    // anything newer was already counted live by `castVote`.
+    cutoff: v.number(),
+    cursor: v.union(v.string(), v.null()),
+    // Last `studentId` seen. The backfill walks `by_voter_election`, where a
+    // student's ballots are contiguous, so a change here means a new voter —
+    // that is how `uniqueVoters` is derived without holding a set in memory.
+    lastStudentId: v.union(v.id("users"), v.null()),
+    scanned: v.number(),
+    uniqueVoters: v.number(),
+    startedAt: v.number(),
+    completedAt: v.optional(v.number()),
+  }).index("by_election", ["electionId"]),
+
   ec_action_log: defineTable({
     electionId: v.id("elections"),
     action: v.string(),
@@ -130,6 +181,26 @@ export default defineSchema({
     reset: v.number(),
     smsSent: v.number(),
     smsFailed: v.number(),
+    errorCount: v.number(),
+    errors: v.array(v.string()),
+    startedAt: v.number(),
+    completedAt: v.optional(v.number()),
+  }).index("by_status", ["status"]),
+
+  // Tracks a `smsRecovery:recoverFailedSms` run — the targeted re-issue of
+  // credentials to students whose SMS was lost when one malformed number
+  // 422'd their whole Arkesel batch. Separate from `reset_jobs` so a recovery
+  // run is never confused with the bulk reset it is repairing, and carries
+  // `skippedInvalid` for the students held back pending a phone correction.
+  sms_recovery_jobs: defineTable({
+    status: seedJobStatusValidator,
+    userIds: v.array(v.id("users")),
+    totalStudents: v.number(),
+    processedIndex: v.number(),
+    reset: v.number(),
+    smsSent: v.number(),
+    smsFailed: v.number(),
+    skippedInvalid: v.number(),
     errorCount: v.number(),
     errors: v.array(v.string()),
     startedAt: v.number(),

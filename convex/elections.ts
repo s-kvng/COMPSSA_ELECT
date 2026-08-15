@@ -32,13 +32,24 @@ export const createElection = mutation({
   handler: async (ctx, args) => {
     const user = await getUser(ctx);
     if (user.role !== "ec") throw new ConvexError("Forbidden");
-    return await ctx.db.insert("elections", {
+    const electionId = await ctx.db.insert("elections", {
       title: args.title,
       description: args.description,
       status: "draft",
       startTime: args.startTime,
       endTime: args.endTime,
     });
+
+    // An election born after the counters exist has no historical ballots to
+    // reconcile, so its counters are complete from the outset and never need a
+    // backfill. See `lib/tallies.ts`.
+    await ctx.db.insert("election_tallies", {
+      electionId,
+      uniqueVoters: 0,
+      countersReady: true,
+    });
+
+    return electionId;
   },
 });
 
