@@ -257,6 +257,114 @@ export const resetStudentPassword = action({
   },
 });
 
+export const getUserByEmail = internalQuery({
+  args: { email: v.string() },
+  returns: v.union(
+    v.object({
+      _id: v.id("users"),
+      _creationTime: v.number(),
+      name: v.string(),
+      email: v.string(),
+      studentId: v.string(),
+      role: userRoleValidator,
+      isFirstLogin: v.boolean(),
+      phone: v.optional(v.string()),
+      level: v.optional(v.number()),
+      sex: v.optional(sexValidator),
+      regular: v.optional(studentTypeValidator),
+      programme: v.optional(v.string()),
+    }),
+    v.null(),
+  ),
+  handler: async (ctx, { email }) => {
+    return await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", email))
+      .unique();
+  },
+});
+
+/**
+ * Resets password + re-sends credentials via SMS for a specific, small list
+ * of accounts looked up by email — any role (student, candidate, ec, hod).
+ * Built for spot-testing/handling a handful of accounts (e.g. ECs
+ * themselves) ahead of a full resetAllStudentPasswords run, without waiting
+ * on the chunked job machinery. Not chunked — keep the list small (a few
+ * dozen at most); sendBatchSms still internally chunks its own HTTP calls.
+ *
+ * CLI-run admin operation, same trust model as resetAllStudentPasswords —
+ * see the comment there for why there's no getAuthUserId/EC check here.
+ *
+ * Usage: bunx convex run users:resetPasswordsByEmail '{"emails":["ec@compssa.org"]}'
+ */
+export const resetPasswordsByEmail = action({
+  args: { emails: v.array(v.string()) },
+  returns: v.object({
+    resetCount: v.number(),
+    smsSent: v.number(),
+    smsFailed: v.number(),
+    errors: v.array(v.string()),
+  }),
+  handler: async (ctx, { emails }) => {
+    const apiKey = process.env.ARKESEL_API_KEY;
+    if (!apiKey) console.warn("ARKESEL_API_KEY not set — passwords will be reset but no SMS will be sent.");
+
+    let resetCount = 0;
+    const errors: string[] = [];
+    const smsRecipients: { phone: string; name: string; email: string; password: string }[] = [];
+
+    for (const email of emails) {
+      const user: Doc<"users"> | null = await ctx.runQuery(internal.users.getUserByEmail, { email });
+      if (!user) {
+        errors.push(`No user found for ${email}`);
+        continue;
+      }
+      if (!user.phone) {
+        errors.push(`No phone on record for ${email} — skipped`);
+        continue;
+      }
+
+      try {
+        const newPassword = generatePassword();
+
+        await modifyAccountCredentials(ctx, {
+          provider: "password",
+          account: { id: user.email, secret: newPassword },
+        });
+
+        await ctx.runMutation(internal.users.patchUser, { userId: user._id, isFirstLogin: true });
+
+        resetCount++;
+
+        if (apiKey) {
+          smsRecipients.push({
+            phone: user.phone,
+            name: user.name.split(" ")[0],
+            email: user.email,
+            password: newPassword,
+          });
+        }
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        errors.push(`Reset failed for ${email}: ${msg}`);
+      }
+    }
+
+    let smsSent = 0;
+    let smsFailed = 0;
+    if (apiKey && smsRecipients.length > 0) {
+      const result = await sendBatchSms(apiKey, smsRecipients);
+      smsSent = result.sentCount;
+      smsFailed = result.failedPhones.length;
+      if (result.failedPhones.length > 0) {
+        errors.push(`SMS batch failed for: ${result.failedPhones.join(", ")}`);
+      }
+    }
+
+    return { resetCount, smsSent, smsFailed, errors };
+  },
+});
+
 // ---------------------------------------------------------------------------
 // Bulk password reset — chunked across scheduled action invocations, same
 // pattern as convex/seed.ts's seed_jobs (see that file for the rationale).
@@ -269,44 +377,60 @@ const RESET_CHUNK_SIZE = 25;
 const MAX_STORED_RESET_ERRORS = 50;
 
 export const getResettableStudentIds = internalQuery({
-  args: { level: v.optional(studentLevelValidator) },
+  args: {
+    level: v.optional(studentLevelValidator),
+    excludeEmails: v.optional(v.array(v.string())),
+  },
   returns: v.array(v.id("users")),
-  handler: async (ctx, { level }): Promise<Id<"users">[]> => {
+  handler: async (ctx, { level, excludeEmails }): Promise<Id<"users">[]> => {
     const [students, candidates] = await Promise.all([
       ctx.db.query("users").withIndex("by_role", (q) => q.eq("role", "student")).collect(),
       ctx.db.query("users").withIndex("by_role", (q) => q.eq("role", "candidate")).collect(),
     ]);
     const all = [...students, ...candidates];
-    const filtered = level === undefined ? all : all.filter((u) => u.level === level);
+    const excludeSet = new Set((excludeEmails ?? []).map((e) => e.toLowerCase()));
+    const filtered = all
+      .filter((u) => level === undefined || u.level === level)
+      .filter((u) => !excludeSet.has(u.email.toLowerCase()));
     return filtered.map((u) => u._id);
   },
 });
 
 /**
- * EC kicks off a bulk password reset + re-SMS for every student/candidate
- * (optionally filtered to one `level`). Mirrors seed.ts's chunked-job
- * pattern: returns immediately with a jobId, the actual work happens in
- * scheduled processResetChunk invocations.
+ * Bulk password reset + re-SMS for every student/candidate (optionally
+ * filtered to one `level`, and optionally excluding specific emails — e.g.
+ * accounts already handled individually via resetPasswordsByEmail so they
+ * don't get a second, redundant reset + SMS).
+ *
+ * This is a CLI-run admin operation (like seed:seedStudents) — access is
+ * controlled by possession of deploy-key CLI access, not an app session, so
+ * it deliberately has no getAuthUserId/EC-role check: `bunx convex run`
+ * carries no authenticated identity and that check would always reject it.
+ * Once an EC-facing UI exists for this, add a thin auth-checked wrapper
+ * action rather than gating this one.
+ *
+ * Mirrors seed.ts's chunked-job pattern: returns immediately with a jobId,
+ * the actual work happens in scheduled processResetChunk invocations.
  *
  * Usage: bunx convex run users:resetAllStudentPasswords
  *        bunx convex run users:resetAllStudentPasswords '{"level":100}'
+ *        bunx convex run users:resetAllStudentPasswords '{"excludeEmails":["ec@compssa.org"]}'
  * Poll:  bunx convex run users:getResetJobStatus '{"jobId":"<id>"}'
  */
 export const resetAllStudentPasswords = action({
-  args: { level: v.optional(studentLevelValidator) },
+  args: {
+    level: v.optional(studentLevelValidator),
+    excludeEmails: v.optional(v.array(v.string())),
+  },
   returns: v.object({
     jobId: v.optional(v.id("reset_jobs")),
     totalStudents: v.number(),
     message: v.string(),
   }),
   handler: async (ctx, args) => {
-    const callerId = await getAuthUserId(ctx);
-    if (!callerId) throw new ConvexError("Unauthenticated");
-    const caller: Doc<"users"> | null = await ctx.runQuery(internal.users.getUserById, { userId: callerId });
-    if (!caller || caller.role !== "ec") throw new ConvexError("Forbidden");
-
     const userIds: Id<"users">[] = await ctx.runQuery(internal.users.getResettableStudentIds, {
       level: args.level,
+      excludeEmails: args.excludeEmails,
     });
 
     if (userIds.length === 0) {
