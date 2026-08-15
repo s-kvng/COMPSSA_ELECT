@@ -43,7 +43,8 @@ export default function LiveDashboardPage() {
 
   const election = useQuery(api.elections.getElection, { electionId });
   const results = useQuery(api.results.electionResults, { electionId });
-  const turnout = useQuery(api.ec_actions.getTurnout, { electionId });
+  const turnout = useQuery(api.ec_actions.getVoterTurnout, { electionId });
+  const electorBase = useQuery(api.ec_actions.getElectorBase, {});
   const ecActions = useQuery(api.ec_actions.getRecentEcActions, { electionId });
   const auditLog = useQuery(
     api.ec_actions.auditLogExport,
@@ -76,7 +77,7 @@ export default function LiveDashboardPage() {
   }
 
   const uniqueVoters = turnout?.uniqueVoters ?? 0;
-  const registeredCount = turnout?.registeredCount ?? 0;
+  const registeredCount = electorBase?.registeredCount ?? 0;
   const turnoutPercent = registeredCount > 0 ? Math.round((uniqueVoters / registeredCount) * 100) : 0;
   const resultCategories = results?.status === 'ok' ? results.categories : [];
 

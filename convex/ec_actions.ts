@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getUser } from "./lib/auth";
+import { readUniqueVoters } from "./lib/tallies";
 
 export const earlyClose = mutation({
   args: { electionId: v.id("elections") },
@@ -56,6 +57,16 @@ export const publishElection = mutation({
   },
 });
 
+/**
+ * @deprecated Scans the whole electorate *and* the whole ballot log on every
+ * vote — this single subscription accounted for the bulk of the deployment's
+ * database read volume. Superseded by `getVoterTurnout` + `getElectorBase`.
+ * Kept only so an in-flight browser session on the previous frontend build
+ * keeps working; safe to delete once the new frontend is deployed.
+ *
+ * It doubles as the reconciliation check for the counters: if this disagrees
+ * with `getVoterTurnout`, re-run `tallies:startTallyBackfill`.
+ */
 export const getTurnout = query({
   args: { electionId: v.id("elections") },
   returns: v.object({ uniqueVoters: v.number(), registeredCount: v.number() }),
@@ -82,6 +93,50 @@ export const getTurnout = query({
     return {
       uniqueVoters: uniqueVoterIds.size,
       registeredCount: verifiedCount,
+    };
+  },
+});
+
+/**
+ * Live ballot count for an election — one document read.
+ *
+ * Deliberately split from `getElectorBase` below. Both halves used to live in
+ * `getTurnout`, which meant every ballot invalidated the subscription and forced
+ * a re-read of all ~3k user documents on top of the whole `voted_log`, for every
+ * connected EC/HOD client. Split apart, the half that changes on every vote is
+ * one document, and the half that reads the user table only re-runs when a user
+ * record actually changes.
+ */
+export const getVoterTurnout = query({
+  args: { electionId: v.id("elections") },
+  returns: v.object({ uniqueVoters: v.number() }),
+  handler: async (ctx, args) => {
+    const user = await getUser(ctx);
+    if (user.role !== "ec" && user.role !== "hod") throw new ConvexError("Forbidden");
+    return { uniqueVoters: await readUniqueVoters(ctx, args.electionId) };
+  },
+});
+
+/**
+ * Size of the verified electorate — students and candidates who have completed
+ * first login. Independent of any election, and unaffected by voting activity.
+ */
+export const getElectorBase = query({
+  args: {},
+  returns: v.object({ registeredCount: v.number() }),
+  handler: async (ctx) => {
+    const user = await getUser(ctx);
+    if (user.role !== "ec" && user.role !== "hod") throw new ConvexError("Forbidden");
+
+    const [students, candidates] = await Promise.all([
+      ctx.db.query("users").withIndex("by_role", (q) => q.eq("role", "student")).take(3000),
+      ctx.db.query("users").withIndex("by_role", (q) => q.eq("role", "candidate")).take(100),
+    ]);
+
+    return {
+      registeredCount:
+        students.filter((s) => !s.isFirstLogin).length +
+        candidates.filter((c) => !c.isFirstLogin).length,
     };
   },
 });
