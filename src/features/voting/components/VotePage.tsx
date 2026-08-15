@@ -7,6 +7,8 @@ import { useCurrentUser } from '@/shared/auth';
 import { api } from '../../../../convex/_generated/api';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { CheckmarkCircle01Icon, ArrowRight01Icon, LockIcon } from '@hugeicons/core-free-icons';
+import { LiveCounter } from '@/components/LiveCounter';
+import { XolaceStrip } from '@/components/extra';
 
 export default function VotePage() {
   const currentUser = useCurrentUser();
@@ -53,11 +55,14 @@ export default function VotePage() {
 
   return (
     <div className="space-y-6 font-sans animate-fade-in py-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
-      <div>
-        <h2 className="font-display font-extrabold text-xl sm:text-2xl text-slate-900">{currentElection.title}</h2>
-        <p className="text-xs text-slate-500 mt-1">
-          Each student votes exactly once per category. Votes are sealed upon submission and irrevocable.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div>
+          <h2 className="font-display font-extrabold text-xl sm:text-2xl text-slate-900">{currentElection.title}</h2>
+          <p className="text-xs text-slate-500 mt-1">
+            Each student votes exactly once per category. Votes are sealed upon submission and irrevocable.
+          </p>
+        </div>
+        <LiveCounter userId={currentUser._id} className="shrink-0 self-start" />
       </div>
 
       {/* Progress banner */}
@@ -153,6 +158,8 @@ export default function VotePage() {
           })}
         </div>
       </div>
+
+      <XolaceStrip placementKey="vote-page" />
     </div>
   );
 }

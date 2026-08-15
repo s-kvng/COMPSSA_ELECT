@@ -23,8 +23,10 @@ import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_password from "../lib/password.js";
 import type * as lib_sms from "../lib/sms.js";
+import type * as presence from "../presence.js";
 import type * as results from "../results.js";
 import type * as seed from "../seed.js";
+import type * as smsDiag from "../smsDiag.js";
 import type * as testSms from "../testSms.js";
 import type * as users from "../users.js";
 import type * as votes from "../votes.js";
@@ -51,8 +53,10 @@ declare const fullApi: ApiFromModules<{
   "lib/auth": typeof lib_auth;
   "lib/password": typeof lib_password;
   "lib/sms": typeof lib_sms;
+  presence: typeof presence;
   results: typeof results;
   seed: typeof seed;
+  smsDiag: typeof smsDiag;
   testSms: typeof testSms;
   users: typeof users;
   votes: typeof votes;
@@ -84,4 +88,6 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {};
+export declare const components: {
+  presence: import("@convex-dev/presence/_generated/component.js").ComponentApi<"presence">;
+};

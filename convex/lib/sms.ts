@@ -56,6 +56,8 @@ export type SmsRecipient = {
 export type BatchSmsResult = {
   sentCount: number;
   failedPhones: string[];
+  /** Arkesel's own words for each failed chunk, so callers can record *why*. */
+  failureReasons: string[];
 };
 
 /**
@@ -71,6 +73,7 @@ export async function sendBatchSms(
 ): Promise<BatchSmsResult> {
   let sentCount = 0;
   const failedPhones: string[] = [];
+  const failureReasons: string[] = [];
 
   for (let i = 0; i < recipients.length; i += SMS_BATCH_CHUNK_SIZE) {
     const chunk = recipients.slice(i, i + SMS_BATCH_CHUNK_SIZE);
@@ -93,18 +96,38 @@ export async function sendBatchSms(
           recipients: recipientsMap,
         }),
       });
-      const body = await response.json();
-      if (!response.ok) {
-        console.error("Arkesel batch SMS error:", body);
+      // Read as text first: Arkesel returns HTML/plain-text bodies on some
+      // failures, and response.json() would throw and hide the real reason.
+      const raw = await response.text();
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(raw);
+      } catch {
+        parsed = null;
+      }
+      // Arkesel answers HTTP 200 with {"status":"..."} for business-level
+      // failures (insufficient balance, invalid sender id, bad recipients),
+      // so an ok status code alone does NOT mean the messages went out.
+      const apiStatus =
+        parsed && typeof parsed === "object" && "status" in parsed
+          ? String((parsed as { status: unknown }).status)
+          : null;
+
+      if (!response.ok || (apiStatus !== null && apiStatus !== "success")) {
+        const reason = `HTTP ${response.status} — ${raw.slice(0, 300)}`;
+        console.error("Arkesel batch SMS error:", reason);
         failedPhones.push(...chunk.map((r) => r.phone));
+        failureReasons.push(reason);
         continue;
       }
       sentCount += chunk.length;
     } catch (err) {
-      console.error("Arkesel batch SMS request failed:", err);
+      const reason = err instanceof Error ? err.message : String(err);
+      console.error("Arkesel batch SMS request failed:", reason);
       failedPhones.push(...chunk.map((r) => r.phone));
+      failureReasons.push(reason);
     }
   }
 
-  return { sentCount, failedPhones };
+  return { sentCount, failedPhones, failureReasons };
 }

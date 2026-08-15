@@ -357,7 +357,9 @@ export const resetPasswordsByEmail = action({
       smsSent = result.sentCount;
       smsFailed = result.failedPhones.length;
       if (result.failedPhones.length > 0) {
-        errors.push(`SMS batch failed for: ${result.failedPhones.join(", ")}`);
+        errors.push(
+          `SMS batch failed for: ${result.failedPhones.join(", ")} — reason: ${result.failureReasons.join(" | ")}`,
+        );
       }
     }
 
@@ -640,7 +642,9 @@ export const processResetChunk = internalAction({
       smsSentDelta = result.sentCount;
       smsFailedDelta = result.failedPhones.length;
       if (result.failedPhones.length > 0) {
-        errors.push(`SMS batch failed for: ${result.failedPhones.join(", ")}`);
+        errors.push(
+          `SMS batch failed for: ${result.failedPhones.join(", ")} — reason: ${result.failureReasons.join(" | ")}`,
+        );
       }
     }
 
