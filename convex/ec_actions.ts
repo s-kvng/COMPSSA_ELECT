@@ -71,13 +71,17 @@ export const getTurnout = query({
     const uniqueVoterIds = new Set(votes.map((v) => v.studentId));
 
     const [students, candidates] = await Promise.all([
-      ctx.db.query("users").withIndex("by_role", (q) => q.eq("role", "student")).take(1000),
+      ctx.db.query("users").withIndex("by_role", (q) => q.eq("role", "student")).take(3000),
       ctx.db.query("users").withIndex("by_role", (q) => q.eq("role", "candidate")).take(100),
     ]);
 
+    const verifiedCount =
+      students.filter((s) => !s.isFirstLogin).length +
+      candidates.filter((c) => !c.isFirstLogin).length;
+
     return {
       uniqueVoters: uniqueVoterIds.size,
-      registeredCount: students.length + candidates.length,
+      registeredCount: verifiedCount,
     };
   },
 });
