@@ -15,7 +15,12 @@ export default function RouteGuard({ children }: RouteGuardProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const isPublicRoute = pathname === '/login' || pathname === '/first-login' || pathname === '/';
+  const isResultsRoute = pathname.startsWith('/results');
+  const isPublicRoute =
+    pathname === '/login' ||
+    pathname === '/first-login' ||
+    pathname === '/' ||
+    isResultsRoute;
 
   useEffect(() => {
     if (authState.status === 'unauthenticated') {
@@ -29,12 +34,15 @@ export default function RouteGuard({ children }: RouteGuardProps) {
       router.push('/dashboard');
       return;
     }
+    // Results are public — never bounce a viewer off them, even mid-first-login.
+    if (isResultsRoute) return;
+
     if (user.isFirstLogin && pathname !== '/first-login') {
       router.push('/first-login');
     } else if (!user.isFirstLogin && pathname === '/first-login') {
       router.push('/dashboard');
     }
-  }, [authState, pathname, router, isPublicRoute]);
+  }, [authState, pathname, router, isPublicRoute, isResultsRoute]);
 
   if (authState.status === 'unauthenticated' && !isPublicRoute) {
     return null;
